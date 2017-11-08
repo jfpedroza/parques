@@ -1,29 +1,17 @@
 
-import * as express from "express";
-import * as http from "http";
-import * as socketio from "socket.io";
-import * as path from "path";
-import * as dotenv from "dotenv";
+import Socket = SocketIO.Socket;
 
-dotenv.config({ path: ".env" });
+export class Server {
 
-const app = express();
-const server = new http.Server(app);
-const io = socketio(server);
+    public constructor() {
 
-app.set("port", process.env.PORT || 3000);
+    }
 
-app.use(express.static(path.join(__dirname, "public")/*, { maxAge: 31557600000 }*/));
+    public onConnection(socket: Socket) {
+        console.log("A new client has connected");
 
-io.on("connection", (socket) => {
-    console.log("A new client has connected");
-
-    socket.on("restart", () => {
-        //game = new ServerGame(io);
-        //game.emitAll("restart");
-    });
-});
-
-server.listen(app.get("port"), () => {
-    console.log("Server running at http://localhost:" + app.get("port"));
-});
+        socket.on("disconnect", () => {
+            console.log("A client has disconnected");
+        });
+    }
+}

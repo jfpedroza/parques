@@ -1,9 +1,7 @@
-let socket = io.connect(`http://${document.location.hostname}:${document.location.port}`, { "forceNew": true });
-
-socket.on("restart", () => {
-    location.reload(true);
-});
+import {Client} from "./Client";
 
 $(() => {
-    console.log("loaded");
+    let client = new Client();
+    client.start();
+
 });
