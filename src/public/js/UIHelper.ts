@@ -32,12 +32,24 @@ export class UIHelper {
         }
     }
 
+    public setUsernameUsed(used: boolean) {
+        let text;
+        if (used) {
+            text = '<strong style="color: red">Ocupado</strong>';
+        } else {
+            text = '<strong style="color: green">Disponible</strong>';
+        }
+
+        UIHelper.updatePopover('#username', text);
+    }
+
     private onStageChange() {
         if (this.stage == 2) {
             $("#username").popover(<PopoverOptions>{
                 content: '...',
                 placement: 'right',
-                trigger: 'manual'
+                trigger: 'manual',
+                html: true
             });
         }
     }
@@ -50,6 +62,7 @@ export class UIHelper {
     }
 
     private usernameTypingStopped() {
+        const client = this.client;
         let timer: Timer = null;
         $("body").on('input', '#username', () => {
             clearTimeout(timer);
@@ -57,7 +70,8 @@ export class UIHelper {
         });
 
         function doStuff() {
-            UIHelper.updatePopover('#username', "holi :3 " + Math.random());
+            UIHelper.updatePopover('#username', '...');
+            client.checkUsername($('#username').val() as string);
         }
     }
 
@@ -70,9 +84,9 @@ export class UIHelper {
         }
 
         element.popover('show');
-        const popover = element.data('popover');
+        const popover = element.data('bs.popover');
         popover.setContent();
-        popover.$tip.addClass(popover.options.placement);
+        $(popover.tip).addClass(popover.config.placement);
 
         if (position) {
             element.attr('data-placement', position);
