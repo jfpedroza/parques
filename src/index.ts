@@ -16,7 +16,7 @@ app.set("port", process.env.PORT || 3000);
 
 app.use(express.static(path.join(__dirname, "public")/*, { maxAge: 31557600000 }*/));
 
-let server = new Server();
+const server = new Server();
 
 io.on("connection", (socket) => {
     server.onConnection(socket);

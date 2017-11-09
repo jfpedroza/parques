@@ -1,5 +1,6 @@
 
 import {Client} from "./Client";
+import Timer = NodeJS.Timer;
 
 export class UIHelper {
 
@@ -16,13 +17,7 @@ export class UIHelper {
 
     public configureEvents() {
         this.enterBtnClick();
-    }
-
-    private enterBtnClick() {
-        let _this = this;
-        $("body").on('click', '#btn-enter', () => {
-            _this.setStage(2);
-        });
+        this.usernameTypingStopped();
     }
 
     public setStage(s: number) {
@@ -32,7 +27,56 @@ export class UIHelper {
         } else {
             this.content.load(`stages/stage${this.stage}.html`, () => {
                 console.log(`Stage ${this.stage} loaded`);
+                this.onStageChange();
             });
+        }
+    }
+
+    private onStageChange() {
+        if (this.stage == 2) {
+            $("#username").popover(<PopoverOptions>{
+                content: '...',
+                placement: 'right',
+                trigger: 'manual'
+            });
+        }
+    }
+
+    private enterBtnClick() {
+        const ui = this;
+        $("body").on('click', '#btn-enter', () => {
+            ui.setStage(2);
+        });
+    }
+
+    private usernameTypingStopped() {
+        let timer: Timer = null;
+        $("body").on('input', '#username', () => {
+            clearTimeout(timer);
+            timer = setTimeout(doStuff, 1000);
+        });
+
+        function doStuff() {
+            UIHelper.updatePopover('#username', "holi :3 " + Math.random());
+        }
+    }
+
+    private static updatePopover(selector: string, content: string, title ?: string, position ?: string) {
+        const element = $(selector);
+
+        element.attr('data-content', content);
+        if (title) {
+            element.attr('data-title', title);
+        }
+
+        element.popover('show');
+        const popover = element.data('popover');
+        popover.setContent();
+        popover.$tip.addClass(popover.options.placement);
+
+        if (position) {
+            element.attr('data-placement', position);
+            element.popover('update');
         }
     }
 }

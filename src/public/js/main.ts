@@ -1,7 +1,7 @@
 import {Client} from "./Client";
 
 $(() => {
-    let client = new Client();
+    const client = new Client();
     client.start();
 
 });

@@ -34,26 +34,39 @@ body {
   margin-top: 15px;
 }
 
-/*.button {
-  box-shadow: rgb(255, 255, 255) 0px 1px 0px 0px inset;
-  background: linear-gradient(rgb(249, 249, 249) 5%, rgb(233, 233, 233) 100%) rgb(249, 249, 249);
-  border-radius: 6px;
-  border: 1px solid rgb(220, 220, 220);
-  display: inline-block;
-  cursor: pointer;
-  color: rgb(102, 102, 102);
-  font-family: Arial;
-  font-size: 18px;
-  font-weight: bold;
-  padding: 13px 30px;
-  text-decoration: none;
-  text-shadow: rgb(255, 255, 255) 0px 1px 0px;
+.text-centered {
+  text-align: center;
 }
 
-.button.disabled {
-  color: red;
-  cursor: wait;
+.credits {
+  @extend .text-centered;
+  margin-top: 25px;
+}
+
+/*.title-stage2 {
+  @extend .text-centered;
+
+  div {
+    display: inline-block;
+
+    img {
+      height: 100px;
+    }
+  }
 }*/
+
+.title-stage2 {
+  .title {
+    vertical-align: bottom;
+  }
+
+  img {
+    margin-left: 10px;
+    height: 100px;
+  }
+
+  margin-bottom: 20px;
+}
 
 .button {
   background: #00f200;
@@ -83,15 +96,6 @@ body {
   text-decoration: none;
 }
 
-.text-centered {
-  text-align: center;
-}
-
-.credits {
-  @extend .text-centered;
-  margin-top: 25px;
-}
-
 .title {
   font-size: 72px;
   background: -webkit-linear-gradient(left, $blue, $green);
@@ -100,4 +104,27 @@ body {
   background: linear-gradient(left, $blue, $green);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.input {
+  display: inline-block;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  padding: 10px 20px;
+  border: 1px solid #b7b7b7;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  font: normal 16px/normal "Times New Roman", Times, serif;
+  color: rgba(0,142,198,1);
+  -o-text-overflow: clip;
+  text-overflow: clip;
+  background: rgba(252,252,252,1);
+  -webkit-box-shadow: 2px 2px 2px 0 rgba(0,0,0,0.2) inset;
+  box-shadow: 2px 2px 2px 0 rgba(0,0,0,0.2) inset;
+  text-shadow: 0 0 0 rgba(255,255,255,0.66) ;
+  -webkit-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
+  -moz-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
+  -o-transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
+  transition: all 200ms cubic-bezier(0.42, 0, 0.58, 1);
 }

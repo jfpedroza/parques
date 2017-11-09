@@ -11,13 +11,13 @@ export class Client {
     }
 
     public connect() {
-        let url = `${document.location.protocol}//${document.location.hostname}:${document.location.port}`;
+        const url = `${document.location.protocol}//${document.location.hostname}:${document.location.port}`;
         this.socket = io.connect(url, { forceNew: true });
     }
 
     public listen() {
 
-        this.socket.on("restart", () => {
+        this.socket.on('restart', () => {
             location.reload(true);
         });
     }

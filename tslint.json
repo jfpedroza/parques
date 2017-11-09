@@ -15,11 +15,6 @@
       "check-whitespace"
     ],
     "no-var-keyword": true,
-    "quotemark": [
-      true,
-      "double",
-      "avoid-escape"
-    ],
     "semicolon": [
       true,
       "always",
@@ -52,7 +47,6 @@
     ],
     "no-internal-module": true,
     "no-trailing-whitespace": true,
-    "no-null-keyword": true,
     "prefer-const": true,
     "jsdoc-format": true
   },
