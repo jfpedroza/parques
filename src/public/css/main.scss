@@ -43,18 +43,6 @@ body {
   margin-top: 25px;
 }
 
-/*.title-stage2 {
-  @extend .text-centered;
-
-  div {
-    display: inline-block;
-
-    img {
-      height: 100px;
-    }
-  }
-}*/
-
 .title-stage2 {
   .title {
     vertical-align: bottom;
@@ -94,6 +82,16 @@ body {
   background-image: -o-linear-gradient(top, #29fc30, #308a20);
   background-image: linear-gradient(to bottom, #29fc30, #308a20);
   text-decoration: none;
+}
+
+.button[disabled], .button[disabled]:hover {
+  background: #cfd0ce;
+  background-image: -webkit-linear-gradient(top, #cfd0ce, #848583);
+  background-image: -moz-linear-gradient(top, #cfd0ce, #848583);
+  background-image: -ms-linear-gradient(top, #cfd0ce, #848583);
+  background-image: -o-linear-gradient(top, #cfd0ce, #848583);
+  background-image: linear-gradient(to bottom, #cfd0ce, #848583);
+  color: black;
 }
 
 .title {

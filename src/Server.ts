@@ -8,8 +8,6 @@ export class Server {
 
     public constructor() {
         this.players = [];
-        this.players.push(new Player(1, 'jhon'));
-        this.players.push(new Player(2, 'kevin'));
     }
 
     public onConnection(socket: Socket) {
@@ -22,6 +20,16 @@ export class Server {
         socket.on("check-username", (username: string) => {
             const used = this.players.filter((player) => player.name == username).length > 0;
             socket.emit("check-username", used);
+        });
+
+        socket.on("log-in", (username: string) => {
+            let player: Player;
+            if (this.players.filter((player) => player.name == username).length == 0) {
+                player = new Player(new Date().getTime(), username);
+                this.players.push(player);
+            }
+
+            socket.emit("log-in", player);
         });
     }
 }

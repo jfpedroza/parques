@@ -32,12 +32,14 @@ export class UIHelper {
         }
     }
 
-    public setUsernameUsed(used: boolean) {
-        let text;
+    public setUsernameUsed(used: boolean, text ?: string) {
         if (used) {
-            text = '<strong style="color: red">Ocupado</strong>';
+            text = text || 'Ocupado';
+            text = `<strong style="color: red">${text}</strong>`;
         } else {
-            text = '<strong style="color: green">Disponible</strong>';
+            text = text || 'Disponible';
+            text = `<strong style="color: green">${text}</strong>`;
+            $('#btn-log-in').removeAttr('disabled');
         }
 
         UIHelper.updatePopover('#username', text);
@@ -45,11 +47,20 @@ export class UIHelper {
 
     private onStageChange() {
         if (this.stage == 2) {
-            $("#username").popover(<PopoverOptions>{
+            const username = $("#username");
+            username.popover(<PopoverOptions>{
                 content: '...',
                 placement: 'right',
                 trigger: 'manual',
                 html: true
+            });
+
+            $("#log-in-form").submit(() => {
+                username.popover('hide');
+                this.client.tryLogIn(username.val() as string);
+                $('#btn-log-in').attr('disabled', 'disabled');
+
+                return false;
             });
         }
     }
@@ -70,8 +81,14 @@ export class UIHelper {
         });
 
         function doStuff() {
-            UIHelper.updatePopover('#username', '...');
-            client.checkUsername($('#username').val() as string);
+            const username = $('#username').val() as string;
+            $('#btn-log-in').attr('disabled', 'disabled');
+            if (username.length < 4) {
+                UIHelper.updatePopover('#username', '<strong style="color: red">Mínimo 4 carácteres</strong>');
+            } else {
+                UIHelper.updatePopover('#username', '...');
+                client.checkUsername(username);
+            }
         }
     }
 
