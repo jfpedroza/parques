@@ -18,17 +18,23 @@ export class UIHelper {
     public configureEvents() {
         this.enterBtnClick();
         this.usernameTypingStopped();
+        this.logOutBtnClick();
     }
 
-    public setStage(s: number) {
-        this.stage = s;
-        if (s == 0) {
-            this.content.html('');
+    public setStage(stage: number, callback?: Function) {
+        if (this.stage != stage) {
+            this.stage = stage;
+            if (stage == 0) {
+                this.content.html('');
+            } else {
+                this.content.load(`stages/stage${this.stage}.html`, () => {
+                    console.log(`Stage ${this.stage} loaded`);
+                    this.onStageChange();
+                    if (callback) callback();
+                });
+            }
         } else {
-            this.content.load(`stages/stage${this.stage}.html`, () => {
-                console.log(`Stage ${this.stage} loaded`);
-                this.onStageChange();
-            });
+            if (callback) callback();
         }
     }
 
@@ -90,6 +96,13 @@ export class UIHelper {
                 client.checkUsername(username);
             }
         }
+    }
+
+    private logOutBtnClick() {
+        const client = this.client;
+        $("body").on('click', '#btn-log-out', () => {
+            client.logOut();
+        });
     }
 
     private static updatePopover(selector: string, content: string, title ?: string, position ?: string) {

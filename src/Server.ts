@@ -22,14 +22,50 @@ export class Server {
             socket.emit("check-username", used);
         });
 
-        socket.on("log-in", (username: string) => {
+        socket.on("log-in", (ply: string) => {
             let player: Player;
-            if (this.players.filter((player) => player.name == username).length == 0) {
-                player = new Player(new Date().getTime(), username);
-                this.players.push(player);
+            const id = parseInt(ply);
+            if (isNaN(id)) {
+                //if (this.players.filter((player) => player.name == ply).length == 0) {
+                if (!this.players.find((player) => player.name == ply)) {
+                    player = new Player(new Date().getTime(), ply);
+                    this.players.push(player);
+                }
+            } else {
+                player = this.getPlayer(id);
+            }
+
+            if (player) {
+                console.log(`${player.name} has logged in`);
             }
 
             socket.emit("log-in", player);
         });
+
+        socket.on("log-out", (player: Player) => {
+
+            console.log(`${player.name} has logged out`);
+            this.removePlayer(player);
+        });
+    }
+
+    public getPlayer(id: number): Player {
+        const result = this.players.filter(p => p.id == id);
+        if (result.length > 0) {
+            return result[0];
+        } else {
+            return null;
+        }
+    }
+
+    public removePlayer(ply: number|Player) {
+        let id: number;
+        if (typeof ply === "number") {
+            id = ply;
+        } else {
+            id = ply.id;
+        }
+
+        this.players.splice(this.players.findIndex((p) => p.id === id), 1);
     }
 }

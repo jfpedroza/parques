@@ -2,6 +2,7 @@
 import Socket = SocketIOClient.Socket;
 import {UIHelper} from "./UIHelper";
 import {Player} from "../../models/Player";
+import {Cookies} from "./Cookies";
 
 export class Client {
     private socket: Socket;
@@ -18,7 +19,12 @@ export class Client {
         this.listen();
         this.ui.configureEvents();
 
-        this.ui.setStage(1);
+        const playerId = Cookies.get('player-id');
+        if (playerId) {
+            this.tryLogIn(playerId);
+        } else {
+            this.ui.setStage(1);
+        }
     }
 
     private connect() {
@@ -39,18 +45,33 @@ export class Client {
         this.socket.on('log-in', (player: Player) => {
             if (player) {
                 this.player = player;
+                Cookies.set('player-id', player.id.toString(), 1);
                 this.ui.setStage(3);
             } else {
-                this.ui.setUsernameUsed(true, 'El nombre de usuario se encuentra ocupado');
+                const byCookie = Cookies.get('player-id') != null;
+                Cookies.remove('player-id');
+                if (byCookie) {
+                    this.ui.setStage(1);
+                } else {
+                    this.ui.setStage(2, () => {
+                        this.ui.setUsernameUsed(true, 'El nombre de usuario se encuentra ocupado');
+                    });
+                }
             }
-        })
+        });
     }
 
     public checkUsername(username: string) {
         this.socket.emit('check-username', username);
     }
 
-    public tryLogIn(username: string) {
-        this.socket.emit('log-in', username);
+    public tryLogIn(ply: string|number) {
+        this.socket.emit('log-in', ply);
+    }
+
+    public logOut() {
+        this.socket.emit('log-out', this.player);
+        Cookies.remove('player-id');
+        location.reload(true);
     }
 }
