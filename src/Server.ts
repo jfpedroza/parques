@@ -1,13 +1,16 @@
 
 import Socket = SocketIO.Socket;
 import {Player} from "./models/Player";
+import {ServerGame} from "./ServerGame";
 
 export class Server {
 
     private players: Player[];
+    private games: ServerGame[];
 
     public constructor() {
         this.players = [];
+        this.games = [];
     }
 
     public onConnection(socket: Socket) {
@@ -26,7 +29,6 @@ export class Server {
             let player: Player;
             const id = parseInt(ply);
             if (isNaN(id)) {
-                //if (this.players.filter((player) => player.name == ply).length == 0) {
                 if (!this.players.find((player) => player.name == ply)) {
                     player = new Player(new Date().getTime(), ply);
                     this.players.push(player);

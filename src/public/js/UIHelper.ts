@@ -10,9 +10,14 @@ export class UIHelper {
 
     private content: JQuery;
 
+    private loading: JQuery;
+
+    private username: JQuery;
+
     public constructor(client: Client) {
         this.client = client;
         this.content = $("#content");
+        this.loading = $("#loading");
     }
 
     public configureEvents() {
@@ -24,17 +29,27 @@ export class UIHelper {
     public setStage(stage: number, callback?: Function) {
         if (this.stage != stage) {
             this.stage = stage;
+            this.setLoading(true);
             if (stage == 0) {
                 this.content.html('');
             } else {
                 this.content.load(`stages/stage${this.stage}.html`, () => {
                     console.log(`Stage ${this.stage} loaded`);
+                    this.setLoading(false);
                     this.onStageChange();
                     if (callback) callback();
                 });
             }
         } else {
             if (callback) callback();
+        }
+    }
+
+    public setLoading(loading: boolean) {
+        if (loading) {
+            this.loading.show();
+        } else {
+            this.loading.hide();
         }
     }
 
@@ -53,9 +68,10 @@ export class UIHelper {
 
     private onStageChange() {
         if (this.stage == 2) {
-            const username = $("#username");
+            this.username = $("#username");
+            const username = this.username;
             username.popover(<PopoverOptions>{
-                content: '...',
+                content: '',
                 placement: 'right',
                 trigger: 'manual',
                 html: true
@@ -80,6 +96,7 @@ export class UIHelper {
 
     private usernameTypingStopped() {
         const client = this.client;
+        const ui = this;
         let timer: Timer = null;
         $("body").on('input', '#username', () => {
             clearTimeout(timer);
@@ -87,13 +104,14 @@ export class UIHelper {
         });
 
         function doStuff() {
-            const username = $('#username').val() as string;
+            const uname = ui.username.val() as string;
             $('#btn-log-in').attr('disabled', 'disabled');
-            if (username.length < 4) {
+            if (uname.length < 4) {
                 UIHelper.updatePopover('#username', '<strong style="color: red">Mínimo 4 carácteres</strong>');
             } else {
-                UIHelper.updatePopover('#username', '...');
-                client.checkUsername(username);
+                ui.setLoading(true);
+                ui.username.popover('hide');
+                client.checkUsername(uname);
             }
         }
     }

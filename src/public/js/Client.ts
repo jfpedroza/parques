@@ -39,6 +39,7 @@ export class Client {
         });
 
         this.socket.on('check-username', (used: boolean) => {
+            this.ui.setLoading(false);
             this.ui.setUsernameUsed(used);
         });
 
