@@ -67,36 +67,61 @@ body {
   margin-top: 25px;
 }
 
-.title-stage2 {
+#stage-2 {
   .title {
-    vertical-align: bottom;
-  }
+    .title-text {
+      vertical-align: bottom;
+    }
 
-  img {
-    margin-left: 10px;
-    height: 100px;
-  }
+    img {
+      margin-left: 10px;
+      height: 100px;
+    }
 
-  margin-bottom: 20px;
+    margin-bottom: 20px;
+  }
 }
 
-.title-stage3 {
+#stage-3, #stage-4 {
   .title {
-    vertical-align: bottom;
-  }
+    .title-text {
+      vertical-align: bottom;
+    }
 
-  img {
-    margin-left: 10px;
-    height: 100px;
-  }
+    img {
+      margin-left: 10px;
+      height: 100px;
+    }
 
-  margin: auto;
+    margin: auto;
+  }
+}
+
+#stage-3 {
+  .player-list {
+    .player {
+      img {
+        height: 20px;
+      }
+    }
+  }
+}
+
+#stage-4 {
+  .player-list {
+    .player {
+      img {
+        height: 30px;
+      }
+    }
+  }
 }
 
 #button-panel {
   button {
     float: right;
     margin-right: 5px;
+    cursor: pointer;
   }
 
   button:first-child {
@@ -155,7 +180,7 @@ body {
   color: black;
 }
 
-.title {
+.title-text {
   font-size: 72px;
   background: -webkit-linear-gradient(left, $blue, $green);
   background: -moz-linear-gradient(left, $blue, $green);

@@ -1,0 +1,55 @@
+<div class="margined-container stage" id="stage-4">
+    <header>
+        <table class="title">
+            <tr>
+                <td class="title-text">Parqués</td>
+                <td>
+                    <img src="img/red_piece.png">
+                </td>
+            </tr>
+        </table>
+    </header>
+    <main>
+        <div class="row no-margin">
+            <div class="col col-sm-9">
+                <h2>Sala</h2>
+            </div>
+            <div class="col col-sm-3" id="button-panel">
+                <button class="btn btn-danger" id="btn-log-out"><span class="oi oi-account-logout"></span> Cerrar Sesión</button>
+                <button class="btn btn-warning" id="btn-leave-room"><span class="oi oi-minus"></span> Salir</button>
+            </div>
+        </div>
+        <div class="" style="width: 80%; margin: auto;">
+            <div class="card room">
+                <div class="card-header">
+                    <div id="no-edit-room-container">
+                        <div class="d-flex flex-row justify-content-between">
+                            <div class="p-2">
+                                <h4 id="room-name">Sala 1</h4>
+                            </div>
+                            <div class="p-2">
+                                <button class="btn btn-primary" id="btn-edit-room-name"><span class="oi oi-pencil"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="edit-room-container">
+                        <form id="room-name-form" class="d-flex flex-row justify-content-between">
+                            <div class="p-2">
+                                <input id="room-input-name" title="Nombre de la sala" class="form-control" placeholder="Nombre de la sala">
+                            </div>
+                            <div class="p-2">
+                                <button class="btn btn-primary" id="btn-save-room-name"><span class="oi oi-check"></span></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column player-list" id="player-list"></div>
+                </div>
+                <div class="card-footer">
+                    <a href="#" class="btn btn-primary"><span class="oi oi-check"></span> Iniciar</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

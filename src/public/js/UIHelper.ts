@@ -14,19 +14,24 @@ export class UIHelper {
 
     private username: JQuery;
 
+    private roomNameInput: JQuery;
+
     public constructor(client: Client) {
         this.client = client;
         this.content = $("#content");
         this.loading = $("#loading");
     }
 
-    public configureEvents() {
+    public configureEvents(): void {
         this.enterBtnClick();
         this.usernameTypingStopped();
         this.logOutBtnClick();
+        this.newRoomBtnClick();
+        this.editRoomNameBtnClick();
+        this.roomNameTypingStopped();
     }
 
-    public setStage(stage: number, callback?: Function) {
+    public setStage(stage: number, callback?: () => void): void {
         if (this.stage != stage) {
             this.stage = stage;
             this.setLoading(true);
@@ -45,7 +50,7 @@ export class UIHelper {
         }
     }
 
-    public setLoading(loading: boolean) {
+    public setLoading(loading: boolean): void {
         if (loading) {
             this.loading.show();
         } else {
@@ -53,7 +58,7 @@ export class UIHelper {
         }
     }
 
-    public setUsernameUsed(used: boolean, text ?: string) {
+    public setUsernameUsed(used: boolean, text ?: string): void {
         if (used) {
             text = text || 'Ocupado';
             text = `<strong style="color: red">${text}</strong>`;
@@ -66,9 +71,9 @@ export class UIHelper {
         UIHelper.updatePopover('#username', text);
     }
 
-    private onStageChange() {
+    private onStageChange(): void {
         if (this.stage == 2) {
-            this.username = $("#username");
+            this.username = $('#username');
             const username = this.username;
             username.popover(<PopoverOptions>{
                 content: '',
@@ -84,21 +89,46 @@ export class UIHelper {
 
                 return false;
             });
+        } else if (this.stage == 4) {
+            this.roomNameInput = $('#room-input-name');
+            this.setEditRoomName(false);
+            if (this.client.game.creator.id != this.client.player.id) {
+                $('#btn-edit-room-name').hide();
+            } else {
+                this.roomNameInput.popover(<PopoverOptions>{
+                    content: '',
+                    placement: 'above',
+                    trigger: 'manual',
+                    html: true
+                });
+
+                const ui = this;
+                $('#room-name-form').submit(() => {
+                    if (!ui.roomNameInput.attr('disabled')) {
+                        ui.roomNameInput.popover('hide');
+                        ui.client.updateRoomName($('#room-input-name').val().toString());
+                        ui.setEditRoomName(false);
+                    }
+                    return false;
+                });
+            }
+
+            this.renderStage4Players();
         }
     }
 
-    private enterBtnClick() {
+    private enterBtnClick(): void {
         const ui = this;
         $("body").on('click', '#btn-enter', () => {
             ui.setStage(2);
         });
     }
 
-    private usernameTypingStopped() {
+    private usernameTypingStopped(): void {
         const client = this.client;
         const ui = this;
         let timer: Timer = null;
-        $("body").on('input', '#username', () => {
+        $('body').on('input', '#username', () => {
             clearTimeout(timer);
             timer = setTimeout(doStuff, 1000);
         });
@@ -116,11 +146,80 @@ export class UIHelper {
         }
     }
 
-    private logOutBtnClick() {
+    private logOutBtnClick(): void {
         const client = this.client;
-        $("body").on('click', '#btn-log-out', () => {
+        $('body').on('click', '#btn-log-out', () => {
             client.logOut();
         });
+    }
+
+    private newRoomBtnClick(): void {
+        const ui = this;
+        $('body').on('click', '#btn-new-room', () => {
+            ui.setLoading(true);
+            ui.client.newRoom();
+        });
+    }
+
+    private editRoomNameBtnClick(): void {
+        $('body').on('click', '#btn-edit-room-name', () => {
+            this.setEditRoomName(true);
+        });
+    }
+
+    private roomNameTypingStopped(): void {
+        const client = this.client;
+        const ui = this;
+        let timer: Timer = null;
+        $('body').on('input', '#room-input-name', () => {
+            $('#btn-save-room-name').attr('disabled', 'disabled');
+            clearTimeout(timer);
+            timer = setTimeout(doStuff, 1000);
+        });
+
+        function doStuff() {
+            const name = ui.roomNameInput.val() as string;
+            if (name.length < 4) {
+                UIHelper.updatePopover('#room-input-name', '<strong style="color: red">Mínimo 4 carácteres</strong>');
+            } else if (name.length > 16) {
+                UIHelper.updatePopover('#room-input-name', '<strong style="color: red">Máximo 16 carácteres</strong>');
+            } else {
+                $('#btn-save-room-name').removeAttr('disabled');
+                ui.roomNameInput.popover('hide');
+            }
+        }
+    }
+
+    private renderStage4Players(): void {
+        const playerList = $('#player-list');
+        playerList.empty();
+        for (const player of this.client.game.players) {
+            $(`<div class="d-flex flex-row player">
+                <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
+                <div class="p-2"><p class="card-text">${player.name}</p></div>
+            </div>`).appendTo(playerList);
+        }
+    }
+
+    private setEditRoomName(edit: boolean): void {
+        const roomName = $('#room-name');
+        const roomInputName = $('#room-input-name');
+        const noEditRoomContainer = $('#no-edit-room-container');
+        const editRoomContainer = $('#edit-room-container');
+
+        if (edit) {
+            roomInputName.val(this.client.game.name);
+            noEditRoomContainer.hide();
+            editRoomContainer.show();
+        } else {
+            roomName.text(this.client.game.name);
+            noEditRoomContainer.show();
+            editRoomContainer.hide();
+
+            if (this.client.game.creator.id != this.client.player.id) {
+                $('#btn-edit-room-name').hide();
+            }
+        }
     }
 
     private static updatePopover(selector: string, content: string, title ?: string, position ?: string) {
