@@ -64,13 +64,41 @@ export class Server {
             this.games.push(game);
             console.log(`New room[${game.id}] created by ${player.name}`);
 
-            socket.emit("room-creation", game.toGame());
+            socket.emit("room-creation", game.toGame(), player.color);
         });
 
         socket.on("update-room-name", (g: Game) => {
             const game = this.getGame(g.id);
             console.log(`Room[${game.id}] name was changed: ${game.name} -> ${g.name}`);
             game.name = g.name;
+        });
+
+        socket.on("new-rooms-list", () => {
+            socket.emit("new-rooms-list", this.getGamesByStatus(GameStatus.CREATED).map(g => g.toGame()));
+        });
+
+        socket.on("join-room", (ply: Player, roomId: number) => {
+            const player = this.getPlayer(ply.id);
+            const game = this.getGame(roomId);
+            let errorMessage: string = null;
+            let error = false;
+            if (game.status != GameStatus.CREATED) {
+                errorMessage = "El juego ya fue iniciado en esta sala.";
+                error = true;
+            } else {
+                if (game.addPlayer(player)) {
+                    console.log(`${player.name} has joined to room[${game.id}][${game.name}]`);
+                } else {
+                    errorMessage = "Se ha alcanzado el máximo de jugadores";
+                    error = true;
+                }
+            }
+
+            if (!error) {
+                socket.emit("room-joining", game.toGame(), errorMessage, player.color);
+            } else {
+                socket.emit("room-joining", null, errorMessage);
+            }
         });
     }
 
@@ -89,11 +117,15 @@ export class Server {
         this.players.splice(this.players.findIndex((p) => p.id === id), 1);
     }
 
-    public getGame(id: number): Game {
+    public getGame(id: number): ServerGame {
         return this.games.find(g => g.id == id);
     }
 
-    public getGames(player: Player): Game[] {
+    public getGames(player: Player): ServerGame[] {
         return this.games.filter(g => g.players.find(p => p.id == player.id));
+    }
+
+    public getGamesByStatus(status: GameStatus): ServerGame[] {
+        return this.games.filter(g => g.status == status);
     }
 }

@@ -5,17 +5,20 @@ import {Player} from "../../models/Player";
 import {Cookies} from "./Cookies";
 import {Game, GameStatus} from "../../models/Game";
 import {ClientGame} from "./ClientGame";
+import {Color} from "../../models/Color";
 
 export class Client {
     private socket: Socket;
     private ui: UIHelper;
     public player: Player;
     public game: ClientGame;
+    public newRooms: ClientGame[];
 
     public constructor() {
         this.ui = new UIHelper(this);
         this.player = null;
         this.game = null;
+        this.newRooms = null;
     }
 
     public start(): void {
@@ -78,9 +81,25 @@ export class Client {
             }
         });
 
-        this.socket.on('room-creation', (game: Game) => {
+        this.socket.on('room-creation', (game: Game, color: Color) => {
             this.game = new ClientGame(game);
+            this.player.color = color;
             this.ui.setStage(4);
+        });
+
+        this.socket.on('new-rooms-list', (games: Game[]) => {
+            this.newRooms = games.map(g => new ClientGame(g));
+            this.ui.renderRoomList();
+        });
+
+        this.socket.on('room-joining', (game: Game, error: string, color: Color) => {
+            if (game) {
+                this.game = new ClientGame(game);
+                this.player.color = color;
+                this.ui.setStage(4);
+            } else {
+                alert(error);
+            }
         });
     }
 
@@ -106,5 +125,13 @@ export class Client {
     public updateRoomName(name: string): void {
         this.game.name = name;
         this.socket.emit('update-room-name', this.game.toGame());
+    }
+
+    public loadRoomList(): void {
+        this.socket.emit('new-rooms-list');
+    }
+
+    public joinRoom(roomId: number): void {
+        this.socket.emit('join-room', this.player, roomId);
     }
 }

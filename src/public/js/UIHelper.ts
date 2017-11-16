@@ -29,6 +29,7 @@ export class UIHelper {
         this.newRoomBtnClick();
         this.editRoomNameBtnClick();
         this.roomNameTypingStopped();
+        this.joinRoomBtnClick();
     }
 
     public setStage(stage: number, callback?: () => void): void {
@@ -89,6 +90,8 @@ export class UIHelper {
 
                 return false;
             });
+        } else if (this.stage == 3) {
+            this.client.loadRoomList();
         } else if (this.stage == 4) {
             this.roomNameInput = $('#room-input-name');
             this.setEditRoomName(false);
@@ -118,9 +121,8 @@ export class UIHelper {
     }
 
     private enterBtnClick(): void {
-        const ui = this;
         $("body").on('click', '#btn-enter', () => {
-            ui.setStage(2);
+            this.setStage(2);
         });
     }
 
@@ -147,17 +149,15 @@ export class UIHelper {
     }
 
     private logOutBtnClick(): void {
-        const client = this.client;
         $('body').on('click', '#btn-log-out', () => {
-            client.logOut();
+            this.client.logOut();
         });
     }
 
     private newRoomBtnClick(): void {
-        const ui = this;
         $('body').on('click', '#btn-new-room', () => {
-            ui.setLoading(true);
-            ui.client.newRoom();
+            this.setLoading(true);
+            this.client.newRoom();
         });
     }
 
@@ -190,6 +190,15 @@ export class UIHelper {
         }
     }
 
+    private joinRoomBtnClick(): void {
+        const client = this.client;
+        $('body').on('click', '.btn-join-room', function() {
+            const room = $(this).closest('.room');
+            const id = parseInt((<string>room.attr('id')).substr(5));
+            client.joinRoom(id);
+        });
+    }
+
     private renderStage4Players(): void {
         const playerList = $('#player-list');
         playerList.empty();
@@ -219,6 +228,33 @@ export class UIHelper {
             if (this.client.game.creator.id != this.client.player.id) {
                 $('#btn-edit-room-name').hide();
             }
+        }
+    }
+
+    public renderRoomList(): void {
+        const roomList = $('#room-list');
+        roomList.empty();
+        for (const game of this.client.newRooms) {
+            let playerList = '<div class="d-flex flex-column player-list">';
+            for (const player of game.players) {
+                playerList += `<div class="d-flex flex-row player">
+                    <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
+                    <div class="p-2"><p class="card-text">${player.name}</p></div>
+                </div>`;
+            }
+            playerList += '</div>';
+
+            $(`<div class="d-inline-flex p-2 align-items-stretch room" id="room-${game.id}">
+                <div class="card">
+                    <h4 class="card-header">${game.name}</h4>
+                    <div class="card-body">
+                        ${playerList}
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-join-room"><span class="oi oi-account-login"></span> Unirse</button>
+                    </div>
+                </div>
+            </div>`).appendTo(roomList);
         }
     }
 
