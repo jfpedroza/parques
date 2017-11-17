@@ -7,32 +7,41 @@ import {Game, GameStatus} from "./models/Game";
 export class Server {
 
     private players: Player[];
+
+    private sockets: Map<Player, Socket>;
+
     private games: ServerGame[];
 
     public constructor() {
         this.players = [];
         this.games = [];
+        this.sockets = new Map<Player, Socket>();
     }
 
     public onConnection(socket: Socket) {
         console.log("A new client has connected");
+        let player: Player = null;
 
         socket.on("disconnect", () => {
-            console.log("A client has disconnected");
+            if (player != null) {
+                console.log(`${player.name} has disconnected`);
+            } else {
+                console.log("A client has disconnected");
+            }
         });
 
         socket.on("check-username", (username: string) => {
-            const used = this.players.filter((player) => player.name == username).length > 0;
+            const used = this.players.filter((p) => p.name == username).length > 0;
             socket.emit("check-username", used);
         });
 
         socket.on("log-in", (ply: string) => {
-            let player: Player;
             let game: Game;
+            player = null;
 
             const id = parseInt(ply);
             if (isNaN(id)) {
-                if (!this.players.find((player) => player.name == ply)) {
+                if (!this.players.find((p) => p.name == ply)) {
                     player = new Player(new Date().getTime(), ply);
                     this.players.push(player);
                 }
@@ -41,6 +50,7 @@ export class Server {
             }
 
             if (player) {
+                this.sockets.set(player, socket);
                 console.log(`${player.name} has logged in`);
                 const nonFinished = this.getGames(player).filter(g => g.status != GameStatus.FINISHED);
                 if (nonFinished.length > 0) {
@@ -53,14 +63,15 @@ export class Server {
             socket.emit("log-in", player, game);
         });
 
-        socket.on("log-out", (player: Player) => {
+        socket.on("log-out", () => {
             console.log(`${player.name} has logged out`);
             this.removePlayer(player);
+            this.sockets.delete(player);
+            player = null;
         });
 
-        socket.on("create-room", (ply: Player) => {
-            const player = this.getPlayer(ply.id);
-            const game = new ServerGame(player);
+        socket.on("create-room", () => {
+            const game = new ServerGame(this, player);
             this.games.push(game);
             console.log(`New room[${game.id}] created by ${player.name}`);
 
@@ -71,14 +82,14 @@ export class Server {
             const game = this.getGame(g.id);
             console.log(`Room[${game.id}] name was changed: ${game.name} -> ${g.name}`);
             game.name = g.name;
+            game.emitAllBut(player, "update-room", game.toGame(), "name");
         });
 
         socket.on("new-rooms-list", () => {
             socket.emit("new-rooms-list", this.getGamesByStatus(GameStatus.CREATED).map(g => g.toGame()));
         });
 
-        socket.on("join-room", (ply: Player, roomId: number) => {
-            const player = this.getPlayer(ply.id);
+        socket.on("join-room", (roomId: number) => {
             const game = this.getGame(roomId);
             let errorMessage: string = null;
             let error = false;
@@ -88,6 +99,7 @@ export class Server {
             } else {
                 if (game.addPlayer(player)) {
                     console.log(`${player.name} has joined to room[${game.id}][${game.name}]`);
+                    game.emitAllBut(player, "update-room", game.toGame(), "players");
                 } else {
                     errorMessage = "Se ha alcanzado el máximo de jugadores";
                     error = true;
@@ -127,5 +139,9 @@ export class Server {
 
     public getGamesByStatus(status: GameStatus): ServerGame[] {
         return this.games.filter(g => g.status == status);
+    }
+
+    public getSocket(player: Player): Socket {
+        return this.sockets.get(player);
     }
 }

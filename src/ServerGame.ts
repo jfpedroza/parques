@@ -2,8 +2,11 @@
 import {Constants, Game, GameStatus} from "./models/Game";
 import {Player} from "./models/Player";
 import {Colors} from "./models/Color";
+import {Server} from "./Server";
 
 export class ServerGame implements Game {
+
+    private server: Server;
 
     public id: number;
 
@@ -19,7 +22,8 @@ export class ServerGame implements Game {
 
     public winner: Player;
 
-    constructor(creator: Player) {
+    constructor(server: Server, creator: Player) {
+        this.server = server;
         this.id = new Date().getTime();
         this.name = this.id.toString();
         this.status = GameStatus.CREATED;
@@ -54,5 +58,42 @@ export class ServerGame implements Game {
             creator: this.creator,
             players: this.players
         };
+    }
+
+    /**
+     * Envía un mensaje al jugador que reciba como parámetro.
+     *
+     * @param {Player} player El jugador al que se le quiere enviar un mensaje.
+     * @param {string} event El mensaje que se quiere enviar
+     * @param args Los parámetros del mensaje
+     */
+    public emit(player: Player, event: string, ... args: any[]) {
+        this.server.getSocket(player).emit(event, ... args);
+    }
+
+    /**
+     * Envía un mensaje a todos los jugadores conectados
+     *
+     * @param {string} event El mensaje que se quiere enviar
+     * @param args Los parámetros del mensaje
+     */
+    public emitAll(event: string, ... args: any[]) {
+        this.players.forEach(p => {
+            this.emit(p, event, ... args);
+        });
+    }
+
+    /**
+     * Envía un mensaje a todos los jugadores menos el especificado
+     * @param {Player} player El jugador al que no se le enviará un mensaje
+     * @param {string} event El mensaje que se quiere enviar
+     * @param args Los parámetros del mensaje
+     */
+    public emitAllBut(player: Player, event: string, ... args: any[]) {
+        this.players.forEach(p => {
+            if (p.id != player.id) {
+                this.emit(p, event, ... args);
+            }
+        });
     }
 }

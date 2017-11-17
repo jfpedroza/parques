@@ -101,6 +101,25 @@ export class Client {
                 alert(error);
             }
         });
+
+        this.socket.on('update-room', (game: Game, type: string) => {
+            let room: ClientGame = null;
+            if (this.game != null && this.game.id == game.id) {
+                if (type == 'name') {
+                    this.game.name = game.name;
+                } else if (type == 'players') {
+                    this.game.players = game.players;
+                }
+
+                room = this.game;
+            } else {
+                // TODO
+            }
+
+            if (room) {
+                this.ui.updateRoom(room, type);
+            }
+        });
     }
 
     public checkUsername(username: string): void {
@@ -113,13 +132,13 @@ export class Client {
     }
 
     public logOut(): void {
-        this.socket.emit('log-out', this.player);
+        this.socket.emit('log-out');
         Cookies.remove('player-id');
         location.reload(true);
     }
 
     public newRoom(): void {
-        this.socket.emit('create-room', this.player);
+        this.socket.emit('create-room');
     }
 
     public updateRoomName(name: string): void {
@@ -132,6 +151,6 @@ export class Client {
     }
 
     public joinRoom(roomId: number): void {
-        this.socket.emit('join-room', this.player, roomId);
+        this.socket.emit('join-room', roomId);
     }
 }

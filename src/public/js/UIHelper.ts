@@ -1,6 +1,7 @@
 
 import {Client} from "./Client";
 import Timer = NodeJS.Timer;
+import {ClientGame} from "./ClientGame";
 
 export class UIHelper {
 
@@ -255,6 +256,18 @@ export class UIHelper {
                     </div>
                 </div>
             </div>`).appendTo(roomList);
+        }
+    }
+
+    public updateRoom(game: ClientGame, type: string) {
+        if (this.stage == 3) {
+            // TODO
+        } else if (this.stage == 4) {
+            if (type == 'name') {
+                $('#room-name').text(game.name);
+            } else if (type == 'players') {
+                this.renderStage4Players();
+            }
         }
     }
 
