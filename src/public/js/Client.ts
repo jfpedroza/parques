@@ -90,6 +90,7 @@ export class Client {
         this.socket.on('new-rooms-list', (games: Game[]) => {
             this.newRooms = games.map(g => new ClientGame(g));
             this.ui.renderRoomList();
+            this.socket.emit('subscribe-for-room-changes');
         });
 
         this.socket.on('room-joining', (game: Game, error: string, color: Color) => {
@@ -113,12 +114,25 @@ export class Client {
 
                 room = this.game;
             } else {
-                // TODO
+                room = this.newRooms.find(g => g.id == game.id);
+                if (room) {
+                    if (type == 'name') {
+                        room.name = game.name;
+                    } else if (type == 'players') {
+                        room.players = game.players;
+                    }
+                }
             }
 
             if (room) {
                 this.ui.updateRoom(room, type);
             }
+        });
+
+        this.socket.on('new-room', (game: Game) => {
+            const room = new ClientGame(game);
+            this.newRooms.push(room);
+            this.ui.renderRoom(room);
         });
     }
 

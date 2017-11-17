@@ -2,7 +2,7 @@
 import Socket = SocketIO.Socket;
 import {Player} from "./models/Player";
 import {ServerGame} from "./ServerGame";
-import {Game, GameStatus} from "./models/Game";
+import {Constants, Game, GameStatus} from "./models/Game";
 
 export class Server {
 
@@ -12,10 +12,13 @@ export class Server {
 
     private games: ServerGame[];
 
+    private registeredPlayers: Player[];
+
     public constructor() {
         this.players = [];
         this.games = [];
         this.sockets = new Map<Player, Socket>();
+        this.registeredPlayers = [];
     }
 
     public onConnection(socket: Socket) {
@@ -24,6 +27,7 @@ export class Server {
 
         socket.on("disconnect", () => {
             if (player != null) {
+                this.unregisterPlayer(player);
                 console.log(`${player.name} has disconnected`);
             } else {
                 console.log("A client has disconnected");
@@ -64,9 +68,10 @@ export class Server {
         });
 
         socket.on("log-out", () => {
-            console.log(`${player.name} has logged out`);
             this.removePlayer(player);
+            this.unregisterPlayer(player);
             this.sockets.delete(player);
+            console.log(`${player.name} has logged out`);
             player = null;
         });
 
@@ -76,6 +81,8 @@ export class Server {
             console.log(`New room[${game.id}] created by ${player.name}`);
 
             socket.emit("room-creation", game.toGame(), player.color);
+            this.unregisterPlayer(player);
+            this.emitAll(this.registeredPlayers, "new-room", game.toGame());
         });
 
         socket.on("update-room-name", (g: Game) => {
@@ -83,6 +90,7 @@ export class Server {
             console.log(`Room[${game.id}] name was changed: ${game.name} -> ${g.name}`);
             game.name = g.name;
             game.emitAllBut(player, "update-room", game.toGame(), "name");
+            this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "name");
         });
 
         socket.on("new-rooms-list", () => {
@@ -100,6 +108,12 @@ export class Server {
                 if (game.addPlayer(player)) {
                     console.log(`${player.name} has joined to room[${game.id}][${game.name}]`);
                     game.emitAllBut(player, "update-room", game.toGame(), "players");
+                    this.unregisterPlayer(player);
+                    if (game.players.length < Constants.maxPlayers) {
+                        this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "players");
+                    } else {
+                        // TODO Max players or no players
+                    }
                 } else {
                     errorMessage = "Se ha alcanzado el máximo de jugadores";
                     error = true;
@@ -107,10 +121,18 @@ export class Server {
             }
 
             if (!error) {
-                socket.emit("room-joining", game.toGame(), errorMessage, player.color);
+                socket.emit("room-joining", game.toGame(), null, player.color);
             } else {
                 socket.emit("room-joining", null, errorMessage);
             }
+        });
+
+        socket.on("subscribe-for-room-changes", () => {
+            this.registerPlayer(player);
+        });
+
+        socket.on("unsubscribe-for-room-changes", () => {
+            this.unregisterPlayer(player);
         });
     }
 
@@ -144,4 +166,43 @@ export class Server {
     public getSocket(player: Player): Socket {
         return this.sockets.get(player);
     }
+
+    private registerPlayer(player: Player): void {
+        const index = this.registeredPlayers.findIndex((p) => p.id === player.id);
+        if (index == -1) {
+            this.registeredPlayers.push(player);
+        }
+    }
+
+    private unregisterPlayer(player: Player): void {
+        const index = this.registeredPlayers.findIndex((p) => p.id === player.id);
+        if (index >= 0) {
+            this.registeredPlayers.splice(index, 1);
+        }
+    }
+
+    /**
+     * Envía un mensaje al jugador que reciba como parámetro.
+     *
+     * @param {Player} player El jugador al que se le quiere enviar un mensaje.
+     * @param {string} event El mensaje que se quiere enviar
+     * @param args Los parámetros del mensaje
+     */
+    public emit(player: Player, event: string, ... args: any[]) {
+        this.getSocket(player).emit(event, ... args);
+    }
+
+    /**
+     * Envía un mensaje a todos los jugadores de un array
+     *
+     * @param players Array de jugadores al que enviar el mensaje
+     * @param {string} event El mensaje que se quiere enviar
+     * @param args Los parámetros del mensaje
+     */
+    public emitAll(players: Player[], event: string, ... args: any[]) {
+        players.forEach(p => {
+            this.emit(p, event, ... args);
+        });
+    }
+
 }

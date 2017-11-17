@@ -17,6 +17,8 @@ export class UIHelper {
 
     private roomNameInput: JQuery;
 
+    private roomList: JQuery;
+
     public constructor(client: Client) {
         this.client = client;
         this.content = $("#content");
@@ -92,6 +94,7 @@ export class UIHelper {
                 return false;
             });
         } else if (this.stage == 3) {
+            this.roomList = $('#room-list');
             this.client.loadRoomList();
         } else if (this.stage == 4) {
             this.roomNameInput = $('#room-input-name');
@@ -200,6 +203,17 @@ export class UIHelper {
         });
     }
 
+    private renderStage3Players(game: ClientGame): void {
+        const playerList = $(`#room-${game.id}`).find(`.player-list`);
+        playerList.empty();
+        for (const player of game.players) {
+            $(`<div class="d-flex flex-row player">
+                <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
+                <div class="p-2"><p class="card-text">${player.name}</p></div>
+            </div>`).appendTo(playerList);
+        }
+    }
+
     private renderStage4Players(): void {
         const playerList = $('#player-list');
         playerList.empty();
@@ -233,35 +247,35 @@ export class UIHelper {
     }
 
     public renderRoomList(): void {
-        const roomList = $('#room-list');
-        roomList.empty();
+        this.roomList.empty();
         for (const game of this.client.newRooms) {
-            let playerList = '<div class="d-flex flex-column player-list">';
-            for (const player of game.players) {
-                playerList += `<div class="d-flex flex-row player">
-                    <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
-                    <div class="p-2"><p class="card-text">${player.name}</p></div>
-                </div>`;
-            }
-            playerList += '</div>';
+            this.renderRoom(game);
+        }
+    }
 
-            $(`<div class="d-inline-flex p-2 align-items-stretch room" id="room-${game.id}">
+    public renderRoom(game: ClientGame): void {
+        $(`<div class="d-inline-flex p-2 align-items-stretch room" id="room-${game.id}">
                 <div class="card">
-                    <h4 class="card-header">${game.name}</h4>
+                    <h4 class="card-header room-name">${game.name}</h4>
                     <div class="card-body">
-                        ${playerList}
+                        <div class="d-flex flex-column player-list"></div>
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary btn-join-room"><span class="oi oi-account-login"></span> Unirse</button>
                     </div>
                 </div>
-            </div>`).appendTo(roomList);
-        }
+            </div>`).appendTo(this.roomList);
+
+        this.renderStage3Players(game);
     }
 
-    public updateRoom(game: ClientGame, type: string) {
+    public updateRoom(game: ClientGame, type: string): void {
         if (this.stage == 3) {
-            // TODO
+            if (type == 'name') {
+                $(`#room-${game.id}`).find(`.room-name`).text(game.name);
+            } else if (type == 'players') {
+                this.renderStage3Players(game);
+            }
         } else if (this.stage == 4) {
             if (type == 'name') {
                 $('#room-name').text(game.name);
@@ -271,7 +285,7 @@ export class UIHelper {
         }
     }
 
-    private static updatePopover(selector: string, content: string, title ?: string, position ?: string) {
+    private static updatePopover(selector: string, content: string, title ?: string, position ?: string): void {
         const element = $(selector);
 
         element.attr('data-content', content);
