@@ -50,6 +50,11 @@ export class ServerGame implements Game {
         return false;
     }
 
+    public removePlayer(player: Player): void {
+        player.color = null;
+        this.players.splice(this.players.findIndex((p) => p.id === player.id), 1);
+    }
+
     public toGame(): Game {
         return <Game>{
             id: this.id,

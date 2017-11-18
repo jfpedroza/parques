@@ -6,6 +6,7 @@ import {Cookies} from "./Cookies";
 import {Game, GameStatus} from "../../models/Game";
 import {ClientGame} from "./ClientGame";
 import {Color} from "../../models/Color";
+import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
 
 export class Client {
     private socket: Socket;
@@ -24,7 +25,7 @@ export class Client {
     public start(): void {
         this.connect();
         this.listen();
-        this.ui.configureEvents();
+        this.ui.configure();
 
         const playerId = Cookies.get('player-id');
         if (playerId) {
@@ -99,32 +100,34 @@ export class Client {
                 this.player.color = color;
                 this.ui.setStage(4);
             } else {
-                alert(error);
+                console.log(error);
+                const notif: ToastrNotification = {
+                    title: "No se pudo unir a la sala",
+                    message: error,
+                    type: NotificationTypes.Error,
+                    position: NotifPositions.TopCenter
+                };
+
+                UIHelper.showNotification(notif);
             }
         });
 
         this.socket.on('update-room', (game: Game, type: string) => {
             let room: ClientGame = null;
             if (this.game != null && this.game.id == game.id) {
-                if (type == 'name') {
-                    this.game.name = game.name;
-                } else if (type == 'players') {
-                    this.game.players = game.players;
-                }
-
                 room = this.game;
             } else {
                 room = this.newRooms.find(g => g.id == game.id);
-                if (room) {
-                    if (type == 'name') {
-                        room.name = game.name;
-                    } else if (type == 'players') {
-                        room.players = game.players;
-                    }
-                }
             }
 
             if (room) {
+                if (type == 'name') {
+                    room.name = game.name;
+                } else if (type == 'players') {
+                    room.players = game.players;
+                    room.creator = game.creator;
+                }
+
                 this.ui.updateRoom(room, type);
             }
         });
@@ -133,6 +136,12 @@ export class Client {
             const room = new ClientGame(game);
             this.newRooms.push(room);
             this.ui.renderRoom(room);
+        });
+
+        this.socket.on('delete-room', (game: Game) => {
+            const room = this.newRooms.find((r) => r.id === game.id);
+            this.newRooms.splice(this.newRooms.indexOf(room), 1);
+            this.ui.deleteRoom(room);
         });
     }
 
@@ -166,5 +175,9 @@ export class Client {
 
     public joinRoom(roomId: number): void {
         this.socket.emit('join-room', roomId);
+    }
+
+    public leaveRoom(): void {
+        this.socket.emit('leave-room', this.game.id);
     }
 }

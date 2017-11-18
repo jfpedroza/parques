@@ -2,6 +2,7 @@
 import {Client} from "./Client";
 import Timer = NodeJS.Timer;
 import {ClientGame} from "./ClientGame";
+import {NotifPositions, ToastrNotification} from "../../models/Notification";
 
 export class UIHelper {
 
@@ -25,7 +26,12 @@ export class UIHelper {
         this.loading = $("#loading");
     }
 
-    public configureEvents(): void {
+    public configure(): void {
+        UIHelper.configureToastr();
+        this.configureEvents();
+    }
+
+    private configureEvents(): void {
         this.enterBtnClick();
         this.usernameTypingStopped();
         this.logOutBtnClick();
@@ -33,6 +39,7 @@ export class UIHelper {
         this.editRoomNameBtnClick();
         this.roomNameTypingStopped();
         this.joinRoomBtnClick();
+        this.leaveRoomBtnClick();
     }
 
     public setStage(stage: number, callback?: () => void): void {
@@ -99,25 +106,26 @@ export class UIHelper {
         } else if (this.stage == 4) {
             this.roomNameInput = $('#room-input-name');
             this.setEditRoomName(false);
+
+            this.roomNameInput.popover(<PopoverOptions>{
+                content: '',
+                placement: 'above',
+                trigger: 'manual',
+                html: true
+            });
+
+            const ui = this;
+            $('#room-name-form').submit(() => {
+                if (!ui.roomNameInput.attr('disabled')) {
+                    ui.roomNameInput.popover('hide');
+                    ui.client.updateRoomName($('#room-input-name').val().toString());
+                    ui.setEditRoomName(false);
+                }
+                return false;
+            });
+
             if (this.client.game.creator.id != this.client.player.id) {
                 $('#btn-edit-room-name').hide();
-            } else {
-                this.roomNameInput.popover(<PopoverOptions>{
-                    content: '',
-                    placement: 'above',
-                    trigger: 'manual',
-                    html: true
-                });
-
-                const ui = this;
-                $('#room-name-form').submit(() => {
-                    if (!ui.roomNameInput.attr('disabled')) {
-                        ui.roomNameInput.popover('hide');
-                        ui.client.updateRoomName($('#room-input-name').val().toString());
-                        ui.setEditRoomName(false);
-                    }
-                    return false;
-                });
             }
 
             this.renderStage4Players();
@@ -172,7 +180,6 @@ export class UIHelper {
     }
 
     private roomNameTypingStopped(): void {
-        const client = this.client;
         const ui = this;
         let timer: Timer = null;
         $('body').on('input', '#room-input-name', () => {
@@ -200,6 +207,13 @@ export class UIHelper {
             const room = $(this).closest('.room');
             const id = parseInt((<string>room.attr('id')).substr(5));
             client.joinRoom(id);
+        });
+    }
+
+    private leaveRoomBtnClick(): void {
+        $('body').on('click', '#btn-leave-room', () => {
+            this.client.leaveRoom();
+            this.setStage(3);
         });
     }
 
@@ -281,8 +295,15 @@ export class UIHelper {
                 $('#room-name').text(game.name);
             } else if (type == 'players') {
                 this.renderStage4Players();
+                if (this.client.game.creator.id == this.client.player.id) {
+                    $('#btn-edit-room-name').show();
+                }
             }
         }
+    }
+
+    public deleteRoom(game: ClientGame): void {
+        $(`#room-${game.id}`).remove();
     }
 
     private static updatePopover(selector: string, content: string, title ?: string, position ?: string): void {
@@ -302,5 +323,52 @@ export class UIHelper {
             element.attr('data-placement', position);
             element.popover('update');
         }
+    }
+
+    /**
+     * Muestra la notificación en pantalla.
+     *
+     * @method showNotification
+     * @param {ToastrNotification} notification La notificación que se quiere mostrar.
+     * @static
+     */
+    public static showNotification(notification: ToastrNotification) {
+        if (notification.position == null) {
+            notification.position = NotifPositions.TopRight;
+        }
+
+        toastr.options.positionClass = "toast-" + notification.position.name;
+        if (notification.title != null) {
+            toastr[notification.type.name](notification.message, notification.title);
+        } else {
+            toastr[notification.type.name](notification.message);
+        }
+    }
+
+    /**
+     * Configura el la biblioteca de notificaciones toastr.
+     *
+     * @method configureToastr
+     * @static
+     */
+    private static configureToastr() {
+
+        toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": false,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": 300,
+            "hideDuration": 1000,
+            "timeOut": 3000,
+            "extendedTimeOut": 1000,
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
     }
 }

@@ -71,6 +71,11 @@ export class Server {
             this.removePlayer(player);
             this.unregisterPlayer(player);
             this.sockets.delete(player);
+            const nonFinished = this.getGames(player).filter(g => g.status != GameStatus.FINISHED);
+            nonFinished.forEach((game) => {
+                this.leaveRoom(player, game);
+            });
+
             console.log(`${player.name} has logged out`);
             player = null;
         });
@@ -94,7 +99,8 @@ export class Server {
         });
 
         socket.on("new-rooms-list", () => {
-            socket.emit("new-rooms-list", this.getGamesByStatus(GameStatus.CREATED).map(g => g.toGame()));
+            const games = this.getGamesByStatus(GameStatus.CREATED).filter(g => g.players.length < Constants.maxPlayers).map(g => g.toGame());
+            socket.emit("new-rooms-list", games);
         });
 
         socket.on("join-room", (roomId: number) => {
@@ -112,7 +118,7 @@ export class Server {
                     if (game.players.length < Constants.maxPlayers) {
                         this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "players");
                     } else {
-                        // TODO Max players or no players
+                        this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
                     }
                 } else {
                     errorMessage = "Se ha alcanzado el máximo de jugadores";
@@ -133,6 +139,11 @@ export class Server {
 
         socket.on("unsubscribe-for-room-changes", () => {
             this.unregisterPlayer(player);
+        });
+
+        socket.on("leave-room", (gameId: number) => {
+            const game = this.getGame(gameId);
+            this.leaveRoom(player, game);
         });
     }
 
@@ -155,6 +166,10 @@ export class Server {
         return this.games.find(g => g.id == id);
     }
 
+    public removeGame(game: ServerGame): void {
+        this.games.splice(this.games.findIndex((g) => g.id === game.id), 1);
+    }
+
     public getGames(player: Player): ServerGame[] {
         return this.games.filter(g => g.players.find(p => p.id == player.id));
     }
@@ -165,6 +180,28 @@ export class Server {
 
     public getSocket(player: Player): Socket {
         return this.sockets.get(player);
+    }
+
+    private leaveRoom(player: Player, game: ServerGame) {
+        game.removePlayer(player);
+        console.log(`${player.name} left room[${game.id}][${game.name}]`);
+        if (game.players.length > 0) {
+            if (game.creator.id == player.id) {
+                game.creator = game.players[0];
+                console.log(`Creator rights have passed to ${game.creator.name}`);
+            }
+
+            game.emitAll("update-room", game.toGame(), "players");
+            if (game.players.length + 1 == Constants.maxPlayers) {
+                this.emitAll(this.registeredPlayers, "new-room", game.toGame());
+            } else {
+                this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "players");
+            }
+        } else {
+            this.removeGame(game);
+            console.log(`Room[${game.id}][${game.name}] has 0 players, deleted`);
+            this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
+        }
     }
 
     private registerPlayer(player: Player): void {
