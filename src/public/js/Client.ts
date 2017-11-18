@@ -143,6 +143,11 @@ export class Client {
             this.newRooms.splice(this.newRooms.indexOf(room), 1);
             this.ui.deleteRoom(room);
         });
+
+        this.socket.on('start-game', () => {
+            this.game.status = GameStatus.ONGOING;
+            this.ui.setStage(5);
+        });
     }
 
     public checkUsername(username: string): void {
@@ -179,5 +184,9 @@ export class Client {
 
     public leaveRoom(): void {
         this.socket.emit('leave-room', this.game.id);
+    }
+
+    public startGame(): void {
+        this.socket.emit('start-game', this.game.id);
     }
 }

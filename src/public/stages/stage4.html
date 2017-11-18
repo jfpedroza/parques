@@ -19,36 +19,34 @@
                 <button class="btn btn-warning" id="btn-leave-room"><span class="oi oi-minus"></span> Salir</button>
             </div>
         </div>
-        <div class="" style="width: 80%; margin: auto;">
-            <div class="card room">
-                <div class="card-header">
-                    <div id="no-edit-room-container">
-                        <div class="d-flex flex-row justify-content-between">
-                            <div class="p-2">
-                                <h4 id="room-name">Sala 1</h4>
-                            </div>
-                            <div class="p-2">
-                                <button class="btn btn-primary" id="btn-edit-room-name"><span class="oi oi-pencil"></span></button>
-                            </div>
+        <div class="card room">
+            <div class="card-header">
+                <div id="no-edit-room-container">
+                    <div class="d-flex flex-row justify-content-between">
+                        <div class="p-2">
+                            <h4 id="room-name">Sala 1</h4>
+                        </div>
+                        <div class="p-2">
+                            <button class="btn btn-primary" id="btn-edit-room-name"><span class="oi oi-pencil"></span></button>
                         </div>
                     </div>
-                    <div id="edit-room-container">
-                        <form id="room-name-form" class="d-flex flex-row justify-content-between">
-                            <div class="p-2">
-                                <input id="room-input-name" title="Nombre de la sala" class="form-control" placeholder="Nombre de la sala">
-                            </div>
-                            <div class="p-2">
-                                <button class="btn btn-primary" id="btn-save-room-name"><span class="oi oi-check"></span></button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column player-list" id="player-list"></div>
+                <div id="edit-room-container">
+                    <form id="room-name-form" class="d-flex flex-row justify-content-between">
+                        <div class="p-2">
+                            <input id="room-input-name" title="Nombre de la sala" class="form-control" placeholder="Nombre de la sala">
+                        </div>
+                        <div class="p-2">
+                            <button class="btn btn-primary" id="btn-save-room-name"><span class="oi oi-check"></span></button>
+                        </div>
+                    </form>
                 </div>
-                <div class="card-footer">
-                    <a href="#" class="btn btn-primary"><span class="oi oi-check"></span> Iniciar</a>
-                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column player-list" id="player-list"></div>
+            </div>
+            <div class="card-footer" id="card-footer">
+                <a href="#" class="btn btn-primary" id="btn-start-game"><span class="oi oi-check"></span> Iniciar</a>
             </div>
         </div>
     </main>

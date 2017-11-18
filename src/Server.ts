@@ -1,6 +1,6 @@
 
 import Socket = SocketIO.Socket;
-import {Player} from "./models/Player";
+import {Player, PlayerStatus} from "./models/Player";
 import {ServerGame} from "./ServerGame";
 import {Constants, Game, GameStatus} from "./models/Game";
 
@@ -28,6 +28,7 @@ export class Server {
         socket.on("disconnect", () => {
             if (player != null) {
                 this.unregisterPlayer(player);
+                player.status = PlayerStatus.DISCONNECTED;
                 console.log(`${player.name} has disconnected`);
             } else {
                 console.log("A client has disconnected");
@@ -51,6 +52,13 @@ export class Server {
                 }
             } else {
                 player = this.getPlayer(id);
+                if (player) {
+                    if (player.status == PlayerStatus.DISCONNECTED) {
+                        player.status = PlayerStatus.CONNECTED;
+                    } else {
+                        player = null;
+                    }
+                }
             }
 
             if (player) {
@@ -77,7 +85,6 @@ export class Server {
             });
 
             console.log(`${player.name} has logged out`);
-            player = null;
         });
 
         socket.on("create-room", () => {
@@ -144,6 +151,13 @@ export class Server {
         socket.on("leave-room", (gameId: number) => {
             const game = this.getGame(gameId);
             this.leaveRoom(player, game);
+        });
+
+        socket.on("start-game", (gameId: number) => {
+            const game = this.getGame(gameId);
+            game.status = GameStatus.ONGOING;
+            console.log(`Game[${game.id}][${game.name}] has started!`);
+            game.emitAll("start-game");
         });
     }
 

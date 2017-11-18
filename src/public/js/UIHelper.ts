@@ -40,6 +40,7 @@ export class UIHelper {
         this.roomNameTypingStopped();
         this.joinRoomBtnClick();
         this.leaveRoomBtnClick();
+        this.startGameBtnClick();
     }
 
     public setStage(stage: number, callback?: () => void): void {
@@ -126,6 +127,7 @@ export class UIHelper {
 
             if (this.client.game.creator.id != this.client.player.id) {
                 $('#btn-edit-room-name').hide();
+                $('#card-footer').hide();
             }
 
             this.renderStage4Players();
@@ -217,6 +219,12 @@ export class UIHelper {
         });
     }
 
+    private startGameBtnClick(): void {
+        $('body').on('click', '#btn-start-game', () => {
+            this.client.startGame();
+        });
+    }
+
     private renderStage3Players(game: ClientGame): void {
         const playerList = $(`#room-${game.id}`).find(`.player-list`);
         playerList.empty();
@@ -297,6 +305,7 @@ export class UIHelper {
                 this.renderStage4Players();
                 if (this.client.game.creator.id == this.client.player.id) {
                     $('#btn-edit-room-name').show();
+                    $('#card-footer').show();
                 }
             }
         }
