@@ -16,3 +16,10 @@ tsWatcher.on('change', function (path) {
     console.log(`${path} changed, compiling main.ts into bundle.js`);
     shell.exec('npm run build-main-ts');
 });
+
+let scssWatcher = chokidar.watch(['src/public/css/main.scss']);
+
+scssWatcher.on('change', function (path) {
+    console.log(`${path} changed, compiling main.scss into main.css`);
+    shell.exec('npm run build-sass');
+});

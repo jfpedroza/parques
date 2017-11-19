@@ -3,6 +3,7 @@ import {Client} from "./Client";
 import Timer = NodeJS.Timer;
 import {ClientGame} from "./ClientGame";
 import {NotifPositions, ToastrNotification} from "../../models/Notification";
+import {Constants} from "../../models/Game";
 
 export class UIHelper {
 
@@ -19,6 +20,8 @@ export class UIHelper {
     private roomNameInput: JQuery;
 
     private roomList: JQuery;
+
+    private board: JQuery;
 
     public constructor(client: Client) {
         this.client = client;
@@ -86,8 +89,7 @@ export class UIHelper {
     private onStageChange(): void {
         if (this.stage == 2) {
             this.username = $('#username');
-            const username = this.username;
-            username.popover(<PopoverOptions>{
+            this.username.popover(<PopoverOptions>{
                 content: '',
                 placement: 'right',
                 trigger: 'manual',
@@ -95,8 +97,8 @@ export class UIHelper {
             });
 
             $("#log-in-form").submit(() => {
-                username.popover('hide');
-                this.client.tryLogIn(username.val() as string);
+                this.username.popover('hide');
+                this.client.tryLogIn(this.username.val() as string);
                 $('#btn-log-in').attr('disabled', 'disabled');
 
                 return false;
@@ -115,12 +117,11 @@ export class UIHelper {
                 html: true
             });
 
-            const ui = this;
             $('#room-name-form').submit(() => {
-                if (!ui.roomNameInput.attr('disabled')) {
-                    ui.roomNameInput.popover('hide');
-                    ui.client.updateRoomName($('#room-input-name').val().toString());
-                    ui.setEditRoomName(false);
+                if (!this.roomNameInput.attr('disabled')) {
+                    this.roomNameInput.popover('hide');
+                    this.client.updateRoomName($('#room-input-name').val().toString());
+                    this.setEditRoomName(false);
                 }
                 return false;
             });
@@ -128,9 +129,21 @@ export class UIHelper {
             if (this.client.game.creator.id != this.client.player.id) {
                 $('#btn-edit-room-name').hide();
                 $('#card-footer').hide();
+            } else {
+                $('#btn-start-game').attr('disabled', 'disabled');
             }
 
             this.renderStage4Players();
+        } else if (this.stage == 5) {
+            this.board = $('#board');
+            const width = this.board.parent().width();
+            const height = this.board.parent().height();
+
+            this.board.attr('width', width);
+            this.board.attr('height', height);
+            $('#room-name').text(this.client.game.name);
+            this.renderStage4Players();
+            this.renderBoard();
         }
     }
 
@@ -303,9 +316,16 @@ export class UIHelper {
                 $('#room-name').text(game.name);
             } else if (type == 'players') {
                 this.renderStage4Players();
-                if (this.client.game.creator.id == this.client.player.id) {
+
+                if (game.creator.id == this.client.player.id) {
                     $('#btn-edit-room-name').show();
                     $('#card-footer').show();
+                }
+
+                if (game.players.length >= Constants.minPlayers) {
+                    $('#btn-start-game').removeAttr('disabled');
+                } else {
+                    $('#btn-start-game').attr('disabled', 'disabled');
                 }
             }
         }
@@ -313,6 +333,20 @@ export class UIHelper {
 
     public deleteRoom(game: ClientGame): void {
         $(`#room-${game.id}`).remove();
+    }
+
+    private renderBoard(): void {
+        const width = this.board.width();
+        const height = this.board.height();
+        /*const bgWidth = 1200;
+        const bgHeight = 1200;*/
+
+        this.board.drawImage({
+            source: 'img/board.png',
+            x: 0, y: 0,
+            width: width, height: height,
+            fromCenter: false
+        });
     }
 
     private static updatePopover(selector: string, content: string, title ?: string, position ?: string): void {

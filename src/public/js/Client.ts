@@ -59,7 +59,7 @@ export class Client {
                 if (game) {
                     this.game = new ClientGame(game);
                     if (this.game.status == GameStatus.CREATED) {
-                        this.ui.setStage(4);   
+                        this.ui.setStage(4);
                     } else if (this.game.status == GameStatus.ONGOING) {
                         this.ui.setStage(5);
                     }
