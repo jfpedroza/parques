@@ -2,11 +2,32 @@
     <div id="canvas-container" class="p-1">
         <canvas id="board" width="100" height="100"></canvas>
     </div><!--
- --><div id="panel-container" class="p-2">
-        <div class="card room">
-            <h4 class="card-header" id="room-name">Sala</h4>
-            <div class="card-body">
-                <div class="d-flex flex-column player-list" id="player-list"></div>
+ --><div id="panel-container" class="p-1">
+        <div class="p-1">
+            <div class="card room">
+                <h4 class="card-header text-center" id="room-name">Sala</h4>
+                <div class="card-body">
+                    <div class="d-flex flex-column player-list" id="player-list"></div>
+                </div>
+            </div>
+        </div>
+        <div class="p-1">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column">
+                        <div class="d-flex flex-row justify-content-center">
+                            <div class="p-1">
+                                <img src="img/dice_5.png" class="dice" id="dice-1">
+                            </div>
+                            <div class="p-1">
+                                <img src="img/dice_6.png" class="dice" id="dice-2">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center p-2">
+                            <button class="btn btn-primary" id="btn-launch-dice">Lanzar dados</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

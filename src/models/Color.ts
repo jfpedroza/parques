@@ -33,6 +33,8 @@ export interface Color {
      * @type {string}
      */
     value: string;
+
+    rotation: number;
 }
 
 /**
@@ -48,14 +50,14 @@ export namespace Colors {
      * @const BLUE
      * @type {Color}
      */
-    export const BLUE: Color = {name: "Azul", code: "blue", value: "#0000FF"};
+    export const BLUE: Color = {name: "Azul", code: "blue", value: "#0000FF", rotation: 180};
     /**
      * La constante RED representa el color rojo de la carta.
      *
      * @const RED
      * @type {Color}
      */
-    export const RED: Color = {name: "Rojo", code: "red", value: "#FF0000"};
+    export const RED: Color = {name: "Rojo", code: "red", value: "#FF0000", rotation: 0};
 
     /**
      * La constante GREEN representa el color verde de la carta.
@@ -63,7 +65,7 @@ export namespace Colors {
      * @const GREEN
      * @type {Color}
      */
-    export const GREEN: Color = {name: "Verde", code: "green", value: "#008000"};
+    export const GREEN: Color = {name: "Verde", code: "green", value: "#008000", rotation: 90};
 
     /**
      * La constante YELLOW representa el color amarillo de la carta.
@@ -71,7 +73,7 @@ export namespace Colors {
      * @const YELLOW
      * @type {Color}
      */
-    export const YELLOW: Color = {name: "Amarillo", code: "yellow", value: "#FFFF00"};
+    export const YELLOW: Color = {name: "Amarillo", code: "yellow", value: "#FFFF00", rotation: 270};
 
     /**
      * La constante ALL representa el cambio de color de la carta.
@@ -79,7 +81,7 @@ export namespace Colors {
      * @const ALL
      * @type {Color}
      */
-    export const ALL: Color = {name: "Todos", code: "", value: "#FFF"};
+    export const ALL: Color = {name: "Todos", code: "", value: "#FFF", rotation: 0};
 
     export const ARRAY: Color[] = [RED, GREEN, BLUE, YELLOW];
 

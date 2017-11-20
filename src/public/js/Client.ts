@@ -57,10 +57,11 @@ export class Client {
                 Cookies.set('player-id', player.id.toString(), 1);
 
                 if (game) {
-                    this.game = new ClientGame(game);
+                    this.game = new ClientGame(game, this.player);
                     if (this.game.status == GameStatus.CREATED) {
                         this.ui.setStage(4);
                     } else if (this.game.status == GameStatus.ONGOING) {
+                        this.game.start(game);
                         this.ui.setStage(5);
                     }
                 } else {
@@ -83,21 +84,21 @@ export class Client {
         });
 
         this.socket.on('room-creation', (game: Game, color: Color) => {
-            this.game = new ClientGame(game);
             this.player.color = color;
+            this.game = new ClientGame(game, this.player);
             this.ui.setStage(4);
         });
 
         this.socket.on('new-rooms-list', (games: Game[]) => {
-            this.newRooms = games.map(g => new ClientGame(g));
+            this.newRooms = games.map(g => new ClientGame(g, this.player));
             this.ui.renderRoomList();
             this.socket.emit('subscribe-for-room-changes');
         });
 
         this.socket.on('room-joining', (game: Game, error: string, color: Color) => {
             if (game) {
-                this.game = new ClientGame(game);
                 this.player.color = color;
+                this.game = new ClientGame(game, this.player);
                 this.ui.setStage(4);
             } else {
                 console.log(error);
@@ -121,19 +122,13 @@ export class Client {
             }
 
             if (room) {
-                if (type == 'name') {
-                    room.name = game.name;
-                } else if (type == 'players') {
-                    room.players = game.players;
-                    room.creator = game.creator;
-                }
-
+                room.update(game, type);
                 this.ui.updateRoom(room, type);
             }
         });
 
         this.socket.on('new-room', (game: Game) => {
-            const room = new ClientGame(game);
+            const room = new ClientGame(game, this.player);
             this.newRooms.push(room);
             this.ui.renderRoom(room);
         });
@@ -144,8 +139,8 @@ export class Client {
             this.ui.deleteRoom(room);
         });
 
-        this.socket.on('start-game', () => {
-            this.game.status = GameStatus.ONGOING;
+        this.socket.on('start-game', (game: Game) => {
+            this.game.start(game);
             this.ui.setStage(5);
         });
     }

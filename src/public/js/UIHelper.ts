@@ -4,10 +4,15 @@ import Timer = NodeJS.Timer;
 import {ClientGame} from "./ClientGame";
 import {NotifPositions, ToastrNotification} from "../../models/Notification";
 import {Constants} from "../../models/Game";
+import {PiecePositions} from "../../models/Piece";
+import {Colors} from "../../models/Color";
+import {Point} from "../../models/Point";
 
 export class UIHelper {
 
     private client: Client;
+
+    private game: ClientGame;
 
     private stage: number = 0;
 
@@ -87,6 +92,7 @@ export class UIHelper {
     }
 
     private onStageChange(): void {
+        this.game = this.client.game;
         if (this.stage == 2) {
             this.username = $('#username');
             this.username.popover(<PopoverOptions>{
@@ -126,7 +132,7 @@ export class UIHelper {
                 return false;
             });
 
-            if (this.client.game.creator.id != this.client.player.id) {
+            if (this.game.creator.id != this.client.player.id) {
                 $('#btn-edit-room-name').hide();
                 $('#card-footer').hide();
             } else {
@@ -135,13 +141,17 @@ export class UIHelper {
 
             this.renderStage4Players();
         } else if (this.stage == 5) {
+            // TODO Add room name change on stage 5
             this.board = $('#board');
             const width = this.board.parent().width();
             const height = this.board.parent().height();
 
             this.board.attr('width', width);
             this.board.attr('height', height);
-            $('#room-name').text(this.client.game.name);
+            this.game.setSize(width, height);
+            this.game.calculatePathPoints();
+
+            $('#room-name').text(this.game.name);
             this.renderStage4Players();
             this.renderBoard();
         }
@@ -252,10 +262,24 @@ export class UIHelper {
     private renderStage4Players(): void {
         const playerList = $('#player-list');
         playerList.empty();
-        for (const player of this.client.game.players) {
+        for (const player of this.game.players) {
+            let text = '';
+            if (this.stage == 5) {
+                if (this.game.currentPlayer.id === player.id) {
+                    if (this.game.player.id == player.id) {
+                        text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span> Turno</span></div>';
+                    } else {
+                        text += '<div class="ml-auto p-2"><span class="badge badge-primary">Turno</span></div>';
+                    }
+                } else if (this.game.player.id == player.id) {
+                    text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span></span></div>';
+                }
+            }
+
             $(`<div class="d-flex flex-row player">
                 <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
                 <div class="p-2"><p class="card-text">${player.name}</p></div>
+                ${text}
             </div>`).appendTo(playerList);
         }
     }
@@ -267,15 +291,15 @@ export class UIHelper {
         const editRoomContainer = $('#edit-room-container');
 
         if (edit) {
-            roomInputName.val(this.client.game.name);
+            roomInputName.val(this.game.name);
             noEditRoomContainer.hide();
             editRoomContainer.show();
         } else {
-            roomName.text(this.client.game.name);
+            roomName.text(this.game.name);
             noEditRoomContainer.show();
             editRoomContainer.hide();
 
-            if (this.client.game.creator.id != this.client.player.id) {
+            if (this.game.creator.id != this.client.player.id) {
                 $('#btn-edit-room-name').hide();
             }
         }
@@ -338,15 +362,72 @@ export class UIHelper {
     private renderBoard(): void {
         const width = this.board.width();
         const height = this.board.height();
-        /*const bgWidth = 1200;
-        const bgHeight = 1200;*/
+        // this.game.players.forEach(player => player.pieces.forEach((p, i) => p.position = i + 1));
+        /*this.game.players.forEach(player => {
+            player.pieces[0].position = 69;
+            player.pieces[1].position = 71;
+            player.pieces[2].position = 73;
+            player.pieces[3].position = 75;
+        });*/
+        this.game.calculatePiecePositions();
+        const pieceRadius = this.game.pieceRadius;
+        const center = this.game.center;
 
-        this.board.drawImage({
+        this.board.clearCanvas();
+
+        this.board.addLayer({
+            type: 'image',
             source: 'img/board.png',
-            x: 0, y: 0,
+            x: center.x, y: center.y,
             width: width, height: height,
-            fromCenter: false
+            rotate: this.game.rotation
         });
+
+        for (const player of this.game.players) {
+            const rotation = this.game.rotation - player.color.rotation;
+            const secondColor = player.color.code == Colors.YELLOW.code ? '#000' : '#FFF';
+
+            this.board.rotateCanvas({
+                rotate: rotation,
+                x: width / 2, y: height / 2,
+                layer: true
+            });
+
+            for (const piece of player.pieces) {
+
+                this.board.addLayer({
+                    type: 'ellipse',
+                    x: piece.p.x,
+                    y: piece.p.y,
+                    width: pieceRadius * 2,
+                    height: pieceRadius * 2,
+                    fillStyle: player.color.value,
+                    strokeWidth: 2,
+                    strokeStyle: secondColor,
+                    name: `p-${player.id}-${piece.id}`,
+                    groups: ['pieces', `p-${player.id}`]
+                });
+
+                this.board.addLayer({
+                    type: 'text',
+                    x: piece.p.x,
+                    y: piece.p.y,
+                    text: piece.id.toString(),
+                    fillStyle: secondColor,
+                    fontStyle: 'bold',
+                    fontSize: pieceRadius,
+                    fontFamily: 'Trebuchet MS, sans-serif',
+                    name: `t-${player.id}-${piece.id}`,
+                    rotate: - rotation
+                });
+            }
+
+            this.board.restoreCanvas({
+                layer: true
+            });
+
+            this.board.drawLayers();
+        }
     }
 
     private static updatePopover(selector: string, content: string, title ?: string, position ?: string): void {

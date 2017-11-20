@@ -3,6 +3,7 @@ import {Constants, Game, GameStatus} from "./models/Game";
 import {Player} from "./models/Player";
 import {Colors} from "./models/Color";
 import {Server} from "./Server";
+import {Piece} from "./models/Piece";
 
 export class ServerGame implements Game {
 
@@ -55,13 +56,25 @@ export class ServerGame implements Game {
         this.players.splice(this.players.findIndex((p) => p.id === player.id), 1);
     }
 
+    public start(): void {
+        this.status = GameStatus.ONGOING;
+        this.currentPlayer = this.players[0];
+        for (const player of this.players) {
+            player.pieces = [];
+            for (let i = 0; i < Constants.pieceCount; i++) {
+                player.pieces.push(new Piece(i + 1));
+            }
+        }
+    }
+
     public toGame(): Game {
         return <Game>{
             id: this.id,
             name: this.name,
             status: this.status,
             creator: this.creator,
-            players: this.players
+            players: this.players,
+            currentPlayer: this.currentPlayer
         };
     }
 

@@ -36,7 +36,7 @@ export class Server {
         });
 
         socket.on("check-username", (username: string) => {
-            const used = this.players.filter((p) => p.name == username).length > 0;
+            const used = this.players.filter((p) => p.name == username && p.status == PlayerStatus.CONNECTED).length > 0;
             socket.emit("check-username", used);
         });
 
@@ -46,9 +46,12 @@ export class Server {
 
             const id = parseInt(ply);
             if (isNaN(id)) {
-                if (!this.players.find((p) => p.name == ply)) {
+                player = this.players.find((p) => p.name == ply);
+                if (!player) {
                     player = new Player(new Date().getTime(), ply);
                     this.players.push(player);
+                } else if (player.status == PlayerStatus.CONNECTED) {
+                    player = null;
                 }
             } else {
                 player = this.getPlayer(id);
@@ -155,9 +158,9 @@ export class Server {
 
         socket.on("start-game", (gameId: number) => {
             const game = this.getGame(gameId);
-            game.status = GameStatus.ONGOING;
+            game.start();
             console.log(`Game[${game.id}][${game.name}] has started!`);
-            game.emitAll("start-game");
+            game.emitAll("start-game", game.toGame());
         });
     }
 

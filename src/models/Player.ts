@@ -1,5 +1,6 @@
 
 import {Color} from "./Color";
+import {Piece} from "./Piece";
 
 export class Player {
 
@@ -10,6 +11,8 @@ export class Player {
     public color: Color;
 
     public status: PlayerStatus;
+
+    public pieces: Piece[];
 
     constructor(id: number, name: string) {
         this.id = id;

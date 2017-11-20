@@ -17,6 +17,8 @@ export interface Game {
 
     winner: Player;
 
+    start: Function;
+
     toGame(): Game;
 }
 
@@ -48,4 +50,6 @@ export namespace Constants {
      * @type {number}
      */
     export const maxPlayers: number = 5;
+
+    export const pieceCount: number = 4;
 }
