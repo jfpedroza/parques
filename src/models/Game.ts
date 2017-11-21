@@ -1,7 +1,7 @@
 
 import {Player} from "./Player";
 
-export interface Game {
+export abstract class Game {
 
     id: number;
 
@@ -17,9 +17,19 @@ export interface Game {
 
     winner: Player;
 
-    start: Function;
+    dice: number[];
 
-    toGame(): Game;
+    public toGame(): Game {
+        return <Game>{
+            id: this.id,
+            name: this.name,
+            status: this.status,
+            creator: this.creator,
+            players: this.players,
+            currentPlayer: this.currentPlayer,
+            dice: this.dice
+        };
+    }
 }
 
 export enum GameStatus {
@@ -52,4 +62,14 @@ export namespace Constants {
     export const maxPlayers: number = 5;
 
     export const pieceCount: number = 4;
+
+    export const diceCount: number = 2;
+
+    export const minLaps: number = 3;
+
+    export const maxLaps: number = 5;
+
+    export const maxImages: number = 6;
+
+    export const maxTries: number = 3;
 }

@@ -3,29 +3,15 @@ import {Game, GameStatus} from "../../models/Game";
 import {Player} from "../../models/Player";
 import {Point} from "../../models/Point";
 import {Colors} from "../../models/Color";
-import {PiecePositions} from "../../models/Piece";
+import {Piece, PiecePositions} from "../../models/Piece";
 
-export class ClientGame implements Game {
-
-    public id: number;
-
-    public name: string;
-
-    public status: GameStatus;
-
-    public creator: Player;
-
-    public players: Player[];
-
-    public currentPlayer: Player;
-
-    public winner: Player;
+export class ClientGame extends Game {
 
     public player: Player;
 
     public rotation: number;
 
-    private pathPoints: Map<number, Point>;
+    public pathPoints: Map<number, Point>; // TODO Put back to private
 
     public width: number;
 
@@ -42,6 +28,7 @@ export class ClientGame implements Game {
     public center: Point;
 
     constructor(game: Game, player: Player) {
+        super();
         this.id = game.id;
         this.name = game.name;
         this.status = game.status;
@@ -66,17 +53,7 @@ export class ClientGame implements Game {
         this.currentPlayer = game.currentPlayer;
         this.rotation = this.player.color.rotation;
         this.players = game.players;
-    }
-
-    public toGame(): Game {
-        return <Game>{
-            id: this.id,
-            name: this.name,
-            status: this.status,
-            creator: this.creator,
-            players: this.players,
-            currentPlayer: this.currentPlayer
-        };
+        this.dice = game.dice;
     }
 
     public setSize(width: number, height: number) {
@@ -97,7 +74,13 @@ export class ClientGame implements Game {
         const xstart = this.width - this.pieceRadius;
         const ystart = this.height - this.pieceRadius;
 
+        const start = new Point(this.center.x + dstart, ystart - this.pieceRadius * 4 * 2);
+        const end = new Point(xstart - this.pieceRadius * 4 * 2, this.center.y + dstart);
+        const center = new Point(end.x, start.y);
+
         const points: Point[] = [];
+
+        points.push(new Point(this.width - this.jailSize / 2, this.height - this.jailSize / 2));
 
         for (let j = 0; j < 4; j++) {
             for (let i = 0; i < 5; i++) {
@@ -106,13 +89,10 @@ export class ClientGame implements Game {
                 points.push(point);
             }
 
-            const start = Point.copy(points[points.length - 1]);
-            const end = new Point(xstart - this.pieceRadius * 4 * 2, this.center.y + dstart);
-            const center = new Point(end.x, start.y);
 
             for (let i = 0; i < 6; i++) {
-                start.rotate(center, (Math.PI / 2) / 7);
                 const point = Point.copy(start);
+                point.rotate(center, (i + 1) * (Math.PI / 2) / 7);
                 point.rotate(this.center, - j * Math.PI / 2);
                 points.push(point);
             }
@@ -132,10 +112,16 @@ export class ClientGame implements Game {
             points.push(new Point(this.center.x, ystart - this.pieceRadius * i * 2));
         }
 
-        points.forEach((p, i) => this.pathPoints.set(i + 1, p));
+        points.push(Point.copy(this.center));
+
+        points.forEach((p, i) => this.pathPoints.set(i, p));
     }
 
     public calculatePiecePositions() {
+
+        /*for (let pos = PiecePositions.JAIL; pos <= PiecePositions.END; pos++) {
+
+        }*/
 
         for (const player of this.players) {
 
@@ -145,8 +131,7 @@ export class ClientGame implements Game {
                 const y = this.height - this.jailSize / 2;
 
                 jailPieces.forEach((piece, i) => {
-                    piece.p.x = x + i * (this.pieceRadius * 2 + 2);
-                    piece.p.y = y;
+                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
                 });
             }
 
@@ -156,8 +141,7 @@ export class ClientGame implements Game {
                 const y = this.height / 2 + this.centerRadius * 0.8;
 
                 endPieces.forEach((piece, i) => {
-                    piece.p.x = x + i * (this.pieceRadius * 2 + 2);
-                    piece.p.y = y;
+                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
                 });
             }
 
@@ -167,6 +151,10 @@ export class ClientGame implements Game {
                     piece.p = Point.copy(this.pathPoints.get(piece.position));
                 });
             }
+
+            player.pieces.forEach(piece => {
+                piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
+            });
         }
     }
 }

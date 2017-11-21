@@ -7,6 +7,7 @@ import {Constants} from "../../models/Game";
 import {PiecePositions} from "../../models/Piece";
 import {Colors} from "../../models/Color";
 import {Point} from "../../models/Point";
+import maxImages = Constants.maxImages;
 
 export class UIHelper {
 
@@ -49,6 +50,7 @@ export class UIHelper {
         this.joinRoomBtnClick();
         this.leaveRoomBtnClick();
         this.startGameBtnClick();
+        this.launchDiceBtnClick();
     }
 
     public setStage(stage: number, callback?: () => void): void {
@@ -152,7 +154,15 @@ export class UIHelper {
             this.game.calculatePathPoints();
 
             $('#room-name').text(this.game.name);
-            this.renderStage4Players();
+            if (this.game.currentPlayer.id != this.client.player.id) {
+                $('#btn-launch-dice').attr('disabled', 'disable');
+            }
+
+            this.game.dice.forEach((dice, i) => {
+                UIHelper.setDiceImage(i, dice);
+            });
+
+            this.renderStage5Players();
             this.renderBoard();
         }
     }
@@ -248,6 +258,13 @@ export class UIHelper {
         });
     }
 
+    private launchDiceBtnClick(): void {
+        $('body').on('click', '#btn-launch-dice', () => {
+            $('#btn-launch-dice').attr('disabled', 'disabled');
+            this.client.launchDice();
+        });
+    }
+
     private renderStage3Players(game: ClientGame): void {
         const playerList = $(`#room-${game.id}`).find(`.player-list`);
         playerList.empty();
@@ -263,17 +280,26 @@ export class UIHelper {
         const playerList = $('#player-list');
         playerList.empty();
         for (const player of this.game.players) {
+            $(`<div class="d-flex flex-row player">
+                <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
+                <div class="p-2"><p class="card-text">${player.name}</p></div>
+            </div>`).appendTo(playerList);
+        }
+    }
+
+    private renderStage5Players(): void {
+        const playerList = $('#player-list');
+        playerList.empty();
+        for (const player of this.game.players) {
             let text = '';
-            if (this.stage == 5) {
-                if (this.game.currentPlayer.id === player.id) {
-                    if (this.game.player.id == player.id) {
-                        text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span> Turno</span></div>';
-                    } else {
-                        text += '<div class="ml-auto p-2"><span class="badge badge-primary">Turno</span></div>';
-                    }
-                } else if (this.game.player.id == player.id) {
-                    text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span></span></div>';
+            if (this.game.currentPlayer.id === player.id) {
+                if (this.game.player.id == player.id) {
+                    text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span> Turno</span></div>';
+                } else {
+                    text += '<div class="ml-auto p-2"><span class="badge badge-primary">Turno</span></div>';
                 }
+            } else if (this.game.player.id == player.id) {
+                text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span></span></div>';
             }
 
             $(`<div class="d-flex flex-row player">
@@ -359,16 +385,26 @@ export class UIHelper {
         $(`#room-${game.id}`).remove();
     }
 
+    public updateCurrentPlayer(): void {
+
+        if (this.game.currentPlayer.id == this.client.player.id) {
+            $('#btn-launch-dice').removeAttr('disabled');
+        }
+
+        this.renderStage5Players();
+    }
+
     private renderBoard(): void {
         const width = this.board.width();
         const height = this.board.height();
         // this.game.players.forEach(player => player.pieces.forEach((p, i) => p.position = i + 1));
         /*this.game.players.forEach(player => {
-            player.pieces[0].position = 69;
-            player.pieces[1].position = 71;
-            player.pieces[2].position = 73;
-            player.pieces[3].position = 75;
+            player.pieces[0].position = 9;
+            player.pieces[1].position = 34;
+            player.pieces[2].position = 28;
+            player.pieces[3].position = 49;
         });*/
+
         this.game.calculatePiecePositions();
         const pieceRadius = this.game.pieceRadius;
         const center = this.game.center;
@@ -384,14 +420,7 @@ export class UIHelper {
         });
 
         for (const player of this.game.players) {
-            const rotation = this.game.rotation - player.color.rotation;
             const secondColor = player.color.code == Colors.YELLOW.code ? '#000' : '#FFF';
-
-            this.board.rotateCanvas({
-                rotate: rotation,
-                x: width / 2, y: height / 2,
-                layer: true
-            });
 
             for (const piece of player.pieces) {
 
@@ -417,16 +446,35 @@ export class UIHelper {
                     fontStyle: 'bold',
                     fontSize: pieceRadius,
                     fontFamily: 'Trebuchet MS, sans-serif',
-                    name: `t-${player.id}-${piece.id}`,
-                    rotate: - rotation
+                    name: `t-${player.id}-${piece.id}`
                 });
             }
 
-            this.board.restoreCanvas({
-                layer: true
-            });
+            // this.drawPath();
 
             this.board.drawLayers();
+        }
+    }
+
+    private static setDiceImage(dice: number, num: number) {
+        const d = dice + 1;
+        $(`#dice-${d}`).find('.dice').hide();
+        $(`#dice-${d}-${num}`).show();
+    }
+
+    private drawPath(): void {
+        for (let pos = PiecePositions.JAIL; pos <= PiecePositions.END; pos++) {
+            const point = this.game.pathPoints.get(pos);
+            this.board.addLayer({
+                type: 'text',
+                x: point.x,
+                y: point.y,
+                text: pos.toString(),
+                fillStyle: '#000',
+                fontStyle: 'bold',
+                fontSize: 15,
+                fontFamily: 'Trebuchet MS, sans-serif'
+            });
         }
     }
 
@@ -447,6 +495,33 @@ export class UIHelper {
             element.attr('data-placement', position);
             element.popover('update');
         }
+    }
+
+    public startAnimation(dice: number, turns: number, i: number, complete: () => void): void {
+
+        if (i == turns) {
+            complete();
+            return;
+        }
+
+        this.game.dice[dice]++;
+        if (this.game.dice[dice] > maxImages) {
+            this.game.dice[dice] = 1;
+        }
+
+        UIHelper.setDiceImage(dice, this.game.dice[dice]);
+
+        let time;
+        if (turns - i > 3 * maxImages) {
+            time = 150;
+        } else {
+            const laps = turns - 3 * maxImages;
+            time = 150 + (i - laps) * 50;
+        }
+
+        setTimeout(() => {
+            this.startAnimation(dice, turns, i + 1, complete);
+        }, time);
     }
 
     /**

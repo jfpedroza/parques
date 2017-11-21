@@ -3,10 +3,11 @@ import Socket = SocketIOClient.Socket;
 import {UIHelper} from "./UIHelper";
 import {Player} from "../../models/Player";
 import {Cookies} from "./Cookies";
-import {Game, GameStatus} from "../../models/Game";
+import {Constants, Game, GameStatus} from "../../models/Game";
 import {ClientGame} from "./ClientGame";
 import {Color} from "../../models/Color";
 import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
+import diceCount = Constants.diceCount;
 
 export class Client {
     private socket: Socket;
@@ -141,7 +142,37 @@ export class Client {
 
         this.socket.on('start-game', (game: Game) => {
             this.game.start(game);
+            this.player = this.game.players.find(p => p.id == this.player.id);
             this.ui.setStage(5);
+        });
+
+        this.socket.on('do-launch-dice', (turns: number[]) => {
+            const complete: boolean[] = Array(diceCount).fill(false);
+            for (let i = 0; i < diceCount; i++) {
+                this.ui.startAnimation(i, turns[i], 0, () => {
+                    console.log(`Animation dice #${i + 1} completed`);
+                    complete[i] = true;
+                    if (complete.filter(c => c === false).length === 0) {
+                        this.socket.emit('dice-animation-complete', this.game.id);
+                    }
+                });
+            }
+        });
+
+        this.socket.on('current-player', (current: Player) => {
+            this.game.currentPlayer = current;
+            this.ui.updateCurrentPlayer();
+        });
+
+        this.socket.on('enable-pieces', (pieces: any) => {
+            const map = new Map<number, number[]>();
+            this.player.pieces.forEach(piece => {
+                if (pieces[piece.id]) {
+                    map.set(piece.id, pieces[piece.id]);
+                }
+            });
+
+            console.log('Enable pieces', map);
         });
     }
 
@@ -183,5 +214,9 @@ export class Client {
 
     public startGame(): void {
         this.socket.emit('start-game', this.game.id);
+    }
+
+    public launchDice(): void {
+        this.socket.emit('launch-dice', this.game.id);
     }
 }

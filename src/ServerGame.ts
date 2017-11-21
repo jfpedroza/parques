@@ -3,27 +3,28 @@ import {Constants, Game, GameStatus} from "./models/Game";
 import {Player} from "./models/Player";
 import {Colors} from "./models/Color";
 import {Server} from "./Server";
-import {Piece} from "./models/Piece";
+import {Piece, PiecePositions} from "./models/Piece";
 
-export class ServerGame implements Game {
+import minLaps = Constants.minLaps;
+import maxLaps = Constants.maxLaps;
+import maxImages = Constants.maxImages;
+import maxPlayers = Constants.maxPlayers;
+import pieceCount = Constants.pieceCount;
+import diceCount = Constants.diceCount;
+import maxTries = Constants.maxTries;
+
+export class ServerGame extends Game {
 
     private server: Server;
 
-    public id: number;
+    private tries: Map<Player, number>;
 
-    public name: string;
+    private piecesToMove: Map<number, number[]>;
 
-    public status: GameStatus;
-
-    public creator: Player;
-
-    public players: Player[];
-
-    public currentPlayer: Player;
-
-    public winner: Player;
+    private diceRemaining: number;
 
     constructor(server: Server, creator: Player) {
+        super();
         this.server = server;
         this.id = new Date().getTime();
         this.name = this.id.toString();
@@ -36,7 +37,7 @@ export class ServerGame implements Game {
     }
 
     public addPlayer(player: Player): boolean {
-        if (this.players.length == Constants.maxPlayers) {
+        if (this.players.length == maxPlayers) {
             return false;
         }
 
@@ -61,21 +62,91 @@ export class ServerGame implements Game {
         this.currentPlayer = this.players[0];
         for (const player of this.players) {
             player.pieces = [];
-            for (let i = 0; i < Constants.pieceCount; i++) {
+            for (let i = 0; i < pieceCount; i++) {
                 player.pieces.push(new Piece(i + 1));
             }
         }
+
+        this.dice = Array(diceCount).fill(1);
+
+        this.tries = new Map();
+        this.players.forEach(player => this.tries.set(player, 0));
     }
 
-    public toGame(): Game {
-        return <Game>{
-            id: this.id,
-            name: this.name,
-            status: this.status,
-            creator: this.creator,
-            players: this.players,
-            currentPlayer: this.currentPlayer
-        };
+    public launchDice(): void {
+        const laps = Math.floor(minLaps + (maxLaps - minLaps) * Math.random());
+
+        const turns = this.dice.map(() => {
+            const lapPart = Math.floor(maxImages * Math.random());
+            return laps * maxImages + lapPart;
+        });
+
+        this.emitAll("do-launch-dice", turns);
+
+        for (let i = 0; i < diceCount; i++) {
+            this.dice[i] = 1 + (this.dice[i] - 1 + turns[i]) % maxImages;
+        }
+
+        this.diceRemaining = this.dice.reduce((a, b) => a + b);
+
+        console.log(`Game[${this.id}][${this.name}] - ${this.currentPlayer.name} got [${this.dice.join(', ')}] = ${this.diceRemaining}`);
+
+        this.piecesToMove = new Map();
+        const inJail = this.currentPlayer.pieces.filter(p => p.position != PiecePositions.JAIL).length == 0;
+        if (inJail) {
+            const d = this.dice[0];
+            let same = true;
+            for (let i = 1; i < this.dice.length; i++) {
+                if (this.dice[i] != d) {
+                    same = false;
+                    break;
+                }
+            }
+
+            if (same) {
+                this.currentPlayer.pieces.forEach(p => this.piecesToMove.set(p.id, [PiecePositions.START]));
+            } else {
+                const tries = this.tries.get(this.currentPlayer) + 1;
+                this.tries.set(this.currentPlayer, tries);
+                if (tries == maxTries) {
+                    this.tries.set(this.currentPlayer, 0);
+                    this.currentPlayer = this.getNextPlayer();
+                }
+            }
+        } else {
+            // TODO Make it work for more than 2 dice
+            const array = [this.dice[0], this.dice[1], this.dice[0] + this.dice[1]];
+
+            this.currentPlayer.pieces.filter(p => p.position != PiecePositions.JAIL && p.position != PiecePositions.END)
+                .forEach(piece => {
+                    this.piecesToMove.set(piece.id, array.slice());
+                });
+        }
+    }
+
+    public diceAnimationComplete(player: Player): void {
+        if (this.piecesToMove.size > 0) {
+            if (player.id == this.currentPlayer.id) {
+                const pieces: any = {};
+                this.piecesToMove.forEach((movs, pId) => {
+                    pieces[pId] = movs;
+                });
+
+                console.log("Pieces to move: ", pieces);
+                this.emit(player, "enable-pieces", pieces);
+            }
+        } else {
+            this.emit(player, "current-player", this.currentPlayer);
+        }
+    }
+
+    private getNextPlayer(): Player {
+        const index = this.players.indexOf(this.currentPlayer);
+        if (index + 1 == this.players.length) {
+            return this.players[0];
+        } else {
+            return this.players[index + 1];
+        }
     }
 
     /**

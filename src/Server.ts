@@ -162,6 +162,16 @@ export class Server {
             console.log(`Game[${game.id}][${game.name}] has started!`);
             game.emitAll("start-game", game.toGame());
         });
+
+        socket.on("launch-dice", (gameId: number) => {
+            const game = this.getGame(gameId);
+            game.launchDice();
+        });
+
+        socket.on("dice-animation-complete", (gameId: number) => {
+            const game = this.getGame(gameId);
+            game.diceAnimationComplete(player);
+        });
     }
 
     public getPlayer(id: number): Player {
