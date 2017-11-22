@@ -43,6 +43,10 @@ export abstract class Game {
     }
 
     public abstract movePiece(player: Player, p: Piece, mov: number): void;
+
+    public allInJail(player: Player): boolean {
+        return player.pieces.every(p => p.position == PiecePositions.JAIL);
+    }
 }
 
 export enum GameStatus {
@@ -78,11 +82,15 @@ export namespace Constants {
 
     export const diceCount: number = 2;
 
-    export const minLaps: number = 3;
+    export const minLaps: number = 2;
 
-    export const maxLaps: number = 5;
+    export const maxLaps: number = 4;
 
     export const maxImages: number = 6;
 
     export const maxTries: number = 3;
+
+    export const animationTime: number = 120;
+
+    export const animationDelay: number = 35;
 }

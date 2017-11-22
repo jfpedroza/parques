@@ -23,6 +23,8 @@ export class ServerGame extends Game {
 
     private safe: boolean;
 
+    private allPiecesInJail: boolean;
+
     constructor(server: Server, creator: Player) {
         super();
         this.server = server;
@@ -93,8 +95,8 @@ export class ServerGame extends Game {
 
         this.safe = false;
         this.piecesToMove = new Map();
-        const inJail = this.currentPlayer.pieces.filter(p => p.position != PiecePositions.JAIL).length == 0;
-        if (inJail) {
+        if (this.allInJail(this.currentPlayer)) {
+            this.allPiecesInJail = true;
             const same = this.dice.every(dice => dice == this.dice[0]);
 
             if (same) {
@@ -108,6 +110,7 @@ export class ServerGame extends Game {
                 }
             }
         } else {
+            this.allPiecesInJail = false;
             // TODO Make it work for more than 2 dice
             const array = [this.dice[0], this.dice[1], this.dice[0] + this.dice[1]];
 
@@ -140,22 +143,30 @@ export class ServerGame extends Game {
 
     public movePiece(player: Player, p: Piece, mov: number): void {
         const piece = player.pieces.find(piece => piece.id == p.id);
-        let movs = this.piecesToMove.get(piece.id);
-        const copy = movs.slice();
-        for (let i = 0; i < movs.length; i++) {
-            movs[i] -= mov;
-        }
-
-        copy.splice(copy.indexOf(mov), 1);
-        // TODO Remove mov from all the pieces to move, except from the all in jail case
-        const min = Math.min(...copy);
-
-        movs = movs.filter(m => m >= min);
-        if (movs.length > 0) {
-            this.piecesToMove.set(piece.id, movs);
+        let pieces: Piece[];
+        if (this.allPiecesInJail) {
+            pieces = [piece];
         } else {
-            this.piecesToMove.delete(piece.id);
+            pieces = player.pieces;
         }
+
+        pieces.forEach(piece => {
+            let movs = this.piecesToMove.get(piece.id);
+            const copy = movs.slice();
+            for (let i = 0; i < movs.length; i++) {
+                movs[i] -= mov;
+            }
+
+            copy.splice(copy.indexOf(mov), 1);
+            const min = Math.min(...copy);
+
+            movs = movs.filter(m => m >= min);
+            if (movs.length > 0) {
+                this.piecesToMove.set(piece.id, movs);
+            } else {
+                this.piecesToMove.delete(piece.id);
+            }
+        });
 
         piece.position = this.calculateNextPosition(piece, mov);
         if (PiecePositions.SAFES.some(safe => safe == piece.position)) {

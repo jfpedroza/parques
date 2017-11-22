@@ -160,7 +160,7 @@ export class ClientGame extends Game {
 
     public movePiece(player: Player, piece: Piece, mov: number): void {
         const pos = this.calculateNextPosition(piece, mov);
-        const point = this.pathPoints.get(pos);
+        const point = Point.copy(this.pathPoints.get(pos));
         point.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
         piece.position = pos;
         piece.p = point;

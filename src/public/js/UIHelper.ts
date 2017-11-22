@@ -9,6 +9,8 @@ import {Colors} from "../../models/Color";
 import {Point} from "../../models/Point";
 import {Player} from "../../models/Player";
 import maxImages = Constants.maxImages;
+import animationTime = Constants.animationTime;
+import animationDelay = Constants.animationDelay;
 
 export class UIHelper {
 
@@ -479,9 +481,19 @@ export class UIHelper {
         const pieces = this.game.currentPlayer.pieces;
         this.game.piecesToMove.forEach((movements, pieceId) => {
             const piece = pieces.find(p => p.id == pieceId);
+            const start = new Point(piece.p.x - (movements.length - 1) * pieceRadius, piece.p.y - pieceRadius * 2 - 3);
+            if (start.x + movements.length * pieceRadius < 0) {
+                start.x = movements.length * pieceRadius;
+            } else if (start.x + movements.length * pieceRadius > this.game.width) {
+                start.x = this.game.width - movements.length * pieceRadius;
+            }
+
+            if (start.y < 0) {
+                start.y = piece.p.y + pieceRadius * 2 + 3;
+            }
 
             movements.forEach((mov, i) => {
-                const point = new Point(piece.p.x - (movements.length - 1) * pieceRadius + i * pieceRadius * 2, piece.p.y - pieceRadius * 2 - 3);
+                const point = new Point(start.x + i * pieceRadius * 2, start.y);
                 this.board.addLayer({
                     type: 'rectangle',
                     x: point.x,
@@ -595,10 +607,10 @@ export class UIHelper {
 
         let time;
         if (turns - i > 3 * maxImages) {
-            time = 150;
+            time = animationTime;
         } else {
             const laps = turns - 3 * maxImages;
-            time = 150 + (i - laps) * 50;
+            time = animationTime + (i - laps) * animationDelay;
         }
 
         setTimeout(() => {
