@@ -1,5 +1,6 @@
 
 import {Player} from "./Player";
+import {Piece, PiecePositions} from "./Piece";
 
 export abstract class Game {
 
@@ -19,6 +20,8 @@ export abstract class Game {
 
     dice: number[];
 
+    piecesToMove: Map<number, number[]>;
+
     public toGame(): Game {
         return <Game>{
             id: this.id,
@@ -30,6 +33,16 @@ export abstract class Game {
             dice: this.dice
         };
     }
+
+    public calculateNextPosition(piece: Piece, mov: number): number {
+        if (piece.position + mov > PiecePositions.END) {
+            return PiecePositions.END * 2 - mov - piece.position;
+        } else {
+            return piece.position + mov;
+        }
+    }
+
+    public abstract movePiece(player: Player, p: Piece, mov: number): void;
 }
 
 export enum GameStatus {

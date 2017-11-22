@@ -127,7 +127,7 @@ export class ClientGame extends Game {
 
             {
                 const jailPieces = player.pieces.filter(p => p.position == PiecePositions.JAIL);
-                const x = this.width - this.jailSize / 2 - jailPieces.length * this.pieceRadius;
+                const x = this.width - this.jailSize / 2 - (jailPieces.length - 1) * this.pieceRadius;
                 const y = this.height - this.jailSize / 2;
 
                 jailPieces.forEach((piece, i) => {
@@ -137,7 +137,7 @@ export class ClientGame extends Game {
 
             {
                 const endPieces = player.pieces.filter(p => p.position == PiecePositions.END);
-                const x = this.width / 2 - endPieces.length * this.pieceRadius;
+                const x = this.width / 2 - (endPieces.length - 1) * this.pieceRadius;
                 const y = this.height / 2 + this.centerRadius * 0.8;
 
                 endPieces.forEach((piece, i) => {
@@ -156,5 +156,13 @@ export class ClientGame extends Game {
                 piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
             });
         }
+    }
+
+    public movePiece(player: Player, piece: Piece, mov: number): void {
+        const pos = this.calculateNextPosition(piece, mov);
+        const point = this.pathPoints.get(pos);
+        point.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
+        piece.position = pos;
+        piece.p = point;
     }
 }

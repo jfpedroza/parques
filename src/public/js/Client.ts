@@ -8,6 +8,7 @@ import {ClientGame} from "./ClientGame";
 import {Color} from "../../models/Color";
 import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
 import diceCount = Constants.diceCount;
+import {Piece} from "../../models/Piece";
 
 export class Client {
     private socket: Socket;
@@ -152,7 +153,7 @@ export class Client {
                 this.ui.startAnimation(i, turns[i], 0, () => {
                     console.log(`Animation dice #${i + 1} completed`);
                     complete[i] = true;
-                    if (complete.filter(c => c === false).length === 0) {
+                    if (complete.every(c => c)) {
                         this.socket.emit('dice-animation-complete', this.game.id);
                     }
                 });
@@ -160,7 +161,7 @@ export class Client {
         });
 
         this.socket.on('current-player', (current: Player) => {
-            this.game.currentPlayer = current;
+            this.game.currentPlayer = this.game.players.find(p => p.id == current.id);
             this.ui.updateCurrentPlayer();
         });
 
@@ -173,6 +174,17 @@ export class Client {
             });
 
             console.log('Enable pieces', map);
+            this.game.piecesToMove = map;
+            this.ui.updatePiecesToMove();
+        });
+
+        this.socket.on('move-piece', (player: Player, piece: Piece, mov: number) => {
+            player = this.game.players.find(p => p.id == player.id);
+            piece = player.pieces.find(p => p.id == piece.id);
+            console.log(`Move piece ${piece.id} of ${player.name} ${mov} place(s)`);
+            this.game.movePiece(player, piece, mov);
+            this.ui.moviePiece(player, piece);
+
         });
     }
 
@@ -218,5 +230,13 @@ export class Client {
 
     public launchDice(): void {
         this.socket.emit('launch-dice', this.game.id);
+    }
+
+    public movePiece(piece: Piece, mov: number): void {
+        this.socket.emit('move-piece', this.game.id, piece, mov);
+    }
+
+    public moveAnimationComplete(): void {
+        this.socket.emit('move-animation-complete', this.game.id);
     }
 }

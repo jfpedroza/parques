@@ -3,6 +3,7 @@ import Socket = SocketIO.Socket;
 import {Player, PlayerStatus} from "./models/Player";
 import {ServerGame} from "./ServerGame";
 import {Constants, Game, GameStatus} from "./models/Game";
+import {Piece} from "./models/Piece";
 
 export class Server {
 
@@ -30,6 +31,7 @@ export class Server {
                 this.unregisterPlayer(player);
                 player.status = PlayerStatus.DISCONNECTED;
                 console.log(`${player.name} has disconnected`);
+                // TODO Notify other players in the room about disconnection and connection
             } else {
                 console.log("A client has disconnected");
             }
@@ -171,6 +173,16 @@ export class Server {
         socket.on("dice-animation-complete", (gameId: number) => {
             const game = this.getGame(gameId);
             game.diceAnimationComplete(player);
+        });
+
+        socket.on("move-piece", (gameId: number, piece: Piece, mov: number) => {
+            const game = this.getGame(gameId);
+            game.movePiece(player, piece, mov);
+        });
+
+        socket.on("move-animation-complete", (gameId: number) => {
+            const game = this.getGame(gameId);
+            game.moveAnimationComplete(player);
         });
     }
 

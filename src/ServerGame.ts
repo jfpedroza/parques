@@ -19,9 +19,9 @@ export class ServerGame extends Game {
 
     private tries: Map<Player, number>;
 
-    private piecesToMove: Map<number, number[]>;
-
     private diceRemaining: number;
+
+    private safe: boolean;
 
     constructor(server: Server, creator: Player) {
         super();
@@ -91,17 +91,11 @@ export class ServerGame extends Game {
 
         console.log(`Game[${this.id}][${this.name}] - ${this.currentPlayer.name} got [${this.dice.join(', ')}] = ${this.diceRemaining}`);
 
+        this.safe = false;
         this.piecesToMove = new Map();
         const inJail = this.currentPlayer.pieces.filter(p => p.position != PiecePositions.JAIL).length == 0;
         if (inJail) {
-            const d = this.dice[0];
-            let same = true;
-            for (let i = 1; i < this.dice.length; i++) {
-                if (this.dice[i] != d) {
-                    same = false;
-                    break;
-                }
-            }
+            const same = this.dice.every(dice => dice == this.dice[0]);
 
             if (same) {
                 this.currentPlayer.pieces.forEach(p => this.piecesToMove.set(p.id, [PiecePositions.START]));
@@ -124,7 +118,7 @@ export class ServerGame extends Game {
         }
     }
 
-    public diceAnimationComplete(player: Player): void {
+    private animationComplete(player: Player) {
         if (this.piecesToMove.size > 0) {
             if (player.id == this.currentPlayer.id) {
                 const pieces: any = {};
@@ -138,6 +132,45 @@ export class ServerGame extends Game {
         } else {
             this.emit(player, "current-player", this.currentPlayer);
         }
+    }
+
+    public diceAnimationComplete(player: Player): void {
+        this.animationComplete(player);
+    }
+
+    public movePiece(player: Player, p: Piece, mov: number): void {
+        const piece = player.pieces.find(piece => piece.id == p.id);
+        let movs = this.piecesToMove.get(piece.id);
+        const copy = movs.slice();
+        for (let i = 0; i < movs.length; i++) {
+            movs[i] -= mov;
+        }
+
+        copy.splice(copy.indexOf(mov), 1);
+        // TODO Remove mov from all the pieces to move, except from the all in jail case
+        const min = Math.min(...copy);
+
+        movs = movs.filter(m => m >= min);
+        if (movs.length > 0) {
+            this.piecesToMove.set(piece.id, movs);
+        } else {
+            this.piecesToMove.delete(piece.id);
+        }
+
+        piece.position = this.calculateNextPosition(piece, mov);
+        if (PiecePositions.SAFES.some(safe => safe == piece.position)) {
+            this.safe = true;
+        }
+
+        if (this.piecesToMove.size == 0 && !this.safe) {
+            this.currentPlayer = this.getNextPlayer();
+        }
+
+        this.emitAll("move-piece", player, piece, mov);
+    }
+
+    public moveAnimationComplete(player: Player): void {
+        this.animationComplete(player);
     }
 
     private getNextPlayer(): Player {

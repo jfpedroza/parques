@@ -21,6 +21,22 @@ interface JCanvasLayerBase {
     rotate?: number;
     translateX?: number;
     translateY?: number;
+    visible?: boolean;
+    data?: Object;
+
+    click?: (layer: any) => void;
+    dblclick?: (layer: any) => void;
+    mousedown?: (layer: any) => void;
+    mouseup?: (layer: any) => void;
+    mousemove?: (layer: any) => void;
+    mouseover?: (layer: any) => void;
+    mouseout?: (layer: any) => void;
+    dragstart?: (layer: any) => void;
+    drag?: (layer: any) => void;
+    dragstop?: (layer: any) => void;
+    touchstart?: (layer: any) => void;
+    touchend?: (layer: any) => void;
+    touchmove?: (layer: any) => void;
 }
 
 interface JCanvasSliceDef extends JCanvasLayerBase {
@@ -94,7 +110,7 @@ interface JCanvasEllipseDef extends JCanvasLayerBase {
 interface JCanvasLayerDef extends JCanvasSliceDef,
     JCanvasTextDef, JCanvasImageDef, JCanvasRectDef,
     JCanvasEllipseDef {
-    type: string;
+    type?: string;
 }
 
 interface JCanvasRotateDef extends JCanvasLayerBase {
@@ -142,6 +158,12 @@ interface JQuery {
     rotateCanvas(def: JCanvasRotateDef): JQuery;
 
     restoreCanvas(def?: JCanvasLayerBase): void;
+
+    removeLayerGroup(name: string): JQuery;
+
+    setLayerGroup(name: string, props: JCanvasLayerDef): JQuery;
+
+    animateLayerGroup(name: string, props: JCanvasLayerDef, time?: number, callback?: (layer: JCanvasLayerDef) => void): JQuery;
 }
 
 // note this declare module is necessary to tell TypeScript not to interpret the whole file as one module;

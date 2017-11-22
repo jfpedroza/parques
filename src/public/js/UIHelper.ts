@@ -4,9 +4,10 @@ import Timer = NodeJS.Timer;
 import {ClientGame} from "./ClientGame";
 import {NotifPositions, ToastrNotification} from "../../models/Notification";
 import {Constants} from "../../models/Game";
-import {PiecePositions} from "../../models/Piece";
+import {Piece, PiecePositions} from "../../models/Piece";
 import {Colors} from "../../models/Color";
 import {Point} from "../../models/Point";
+import {Player} from "../../models/Player";
 import maxImages = Constants.maxImages;
 
 export class UIHelper {
@@ -434,7 +435,21 @@ export class UIHelper {
                     strokeWidth: 2,
                     strokeStyle: secondColor,
                     name: `p-${player.id}-${piece.id}`,
-                    groups: ['pieces', `p-${player.id}`]
+                    groups: ['pieces', `p-${player.id}`, `p-${player.id}-${piece.id}`],
+                    data: {
+                        player: player,
+                        piece: piece
+                    },
+                    mouseover: (layer) => {
+                        const player = layer.data.player;
+                        const piece = layer.data.piece;
+                        const name = `burble-${player.id}-${piece.id}`;
+                        this.board.setLayerGroup('mov-burbles', {
+                            visible: false
+                        }).setLayerGroup(name, {
+                            visible: true
+                        }).drawLayers();
+                    }
                 });
 
                 this.board.addLayer({
@@ -446,7 +461,8 @@ export class UIHelper {
                     fontStyle: 'bold',
                     fontSize: pieceRadius,
                     fontFamily: 'Trebuchet MS, sans-serif',
-                    name: `t-${player.id}-${piece.id}`
+                    name: `t-${player.id}-${piece.id}`,
+                    groups: ['texts', `t-${player.id}`, `p-${player.id}-${piece.id}`],
                 });
             }
 
@@ -454,6 +470,72 @@ export class UIHelper {
 
             this.board.drawLayers();
         }
+    }
+
+    public updatePiecesToMove(): void {
+
+        const pieceRadius = this.game.pieceRadius;
+
+        const pieces = this.game.currentPlayer.pieces;
+        this.game.piecesToMove.forEach((movements, pieceId) => {
+            const piece = pieces.find(p => p.id == pieceId);
+
+            movements.forEach((mov, i) => {
+                const point = new Point(piece.p.x - (movements.length - 1) * pieceRadius + i * pieceRadius * 2, piece.p.y - pieceRadius * 2 - 3);
+                this.board.addLayer({
+                    type: 'rectangle',
+                    x: point.x,
+                    y: point.y,
+                    width: pieceRadius * 2,
+                    height: pieceRadius * 2,
+                    fillStyle: '#FFF',
+                    strokeWidth: 1,
+                    strokeStyle: '#000',
+                    groups: ['mov-burbles', `burble-${this.game.currentPlayer.id}-${piece.id}`],
+                    visible: false,
+                    data: {
+                        piece: piece,
+                        movement: mov
+                    },
+                    click: layer => {
+                        const piece = layer.data.piece;
+                        const mov = layer.data.movement;
+                        this.client.movePiece(piece, mov);
+
+                        this.board.removeLayerGroup('mov-burbles')
+                            .drawLayers();
+                    }
+                });
+
+                const text = piece.position + mov == PiecePositions.START ? 'S' : mov.toString();
+                this.board.addLayer({
+                    type: 'text',
+                    x: point.x,
+                    y: point.y,
+                    text: text,
+                    fillStyle: '#000',
+                    fontStyle: 'bold',
+                    fontSize: pieceRadius,
+                    fontFamily: 'Trebuchet MS, sans-serif',
+                    groups: ['mov-burbles', `burble-${this.game.currentPlayer.id}-${piece.id}`],
+                    visible: false
+                });
+            });
+
+            this.board.drawLayers();
+        });
+    }
+
+    public moviePiece(player: Player, piece: Piece): void {
+
+        this.board.animateLayerGroup(`p-${player.id}-${piece.id}`, {
+            x: piece.p.x,
+            y: piece.p.y
+        }, 500, layer => {
+            if (layer.type == 'ellipse') {
+                this.client.moveAnimationComplete();
+            }
+        });
     }
 
     private static setDiceImage(dice: number, num: number) {
