@@ -142,6 +142,16 @@ body {
   }
 }
 
+#stage-6 {
+  .player-list {
+    .player {
+      img {
+        height: 30px;
+      }
+    }
+  }
+}
+
 #canvas-container {
   height: 100vmin;
   width: 100vmin;
@@ -170,6 +180,11 @@ body {
   button:first-child {
     margin-right: 0;
   }
+}
+
+#winner-text {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 .no-margin {

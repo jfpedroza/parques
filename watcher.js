@@ -10,7 +10,7 @@ htmlWatcher.on('change', function (path) {
     shell.cp(path, newPath);
 });
 
-let tsWatcher = chokidar.watch(['src/public/js/*.ts']);
+let tsWatcher = chokidar.watch(['src/public/js/*.ts', 'src/models/*.ts']);
 
 tsWatcher.on('change', function (path) {
     console.log(`${path} changed, compiling main.ts into bundle.js`);

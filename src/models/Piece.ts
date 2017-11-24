@@ -20,6 +20,7 @@ export namespace PiecePositions {
 
     export const JAIL = 0;
     export const START = 5;
+    export const LAP = 68;
     export const END = 76;
     export const SAFES = [12, 17, 29, 34, 46, 51, 63, 68];
 }

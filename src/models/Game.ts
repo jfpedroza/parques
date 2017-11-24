@@ -90,7 +90,7 @@ export namespace Constants {
 
     export const maxTries: number = 3;
 
-    export const animationTime: number = 120;
+    export const animationTime: number = 100;
 
-    export const animationDelay: number = 35;
+    export const animationDelay: number = 20;
 }

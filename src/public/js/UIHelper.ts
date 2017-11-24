@@ -54,6 +54,7 @@ export class UIHelper {
         this.leaveRoomBtnClick();
         this.startGameBtnClick();
         this.launchDiceBtnClick();
+        this.returnBtnClick();
     }
 
     public setStage(stage: number, callback?: () => void): void {
@@ -98,75 +99,93 @@ export class UIHelper {
 
     private onStageChange(): void {
         this.game = this.client.game;
-        if (this.stage == 2) {
-            this.username = $('#username');
-            this.username.popover(<PopoverOptions>{
-                content: '',
-                placement: 'right',
-                trigger: 'manual',
-                html: true
-            });
+        switch (this.stage) {
+            case 2:
+                this.username = $('#username');
+                this.username.popover(<PopoverOptions>{
+                    content: '',
+                    placement: 'right',
+                    trigger: 'manual',
+                    html: true
+                });
 
-            $("#log-in-form").submit(() => {
-                this.username.popover('hide');
-                this.client.tryLogIn(this.username.val() as string);
-                $('#btn-log-in').attr('disabled', 'disabled');
+                $("#log-in-form").submit(() => {
+                    this.username.popover('hide');
+                    this.client.tryLogIn(this.username.val() as string);
+                    $('#btn-log-in').attr('disabled', 'disabled');
 
-                return false;
-            });
-        } else if (this.stage == 3) {
-            this.roomList = $('#room-list');
-            this.client.loadRoomList();
-        } else if (this.stage == 4) {
-            this.roomNameInput = $('#room-input-name');
-            this.setEditRoomName(false);
+                    return false;
+                });
 
-            this.roomNameInput.popover(<PopoverOptions>{
-                content: '',
-                placement: 'above',
-                trigger: 'manual',
-                html: true
-            });
+                break;
 
-            $('#room-name-form').submit(() => {
-                if (!this.roomNameInput.attr('disabled')) {
-                    this.roomNameInput.popover('hide');
-                    this.client.updateRoomName($('#room-input-name').val().toString());
-                    this.setEditRoomName(false);
+            case 3:
+                this.roomList = $('#room-list');
+                this.client.loadRoomList();
+
+                break;
+
+            case 4:
+                this.roomNameInput = $('#room-input-name');
+                this.setEditRoomName(false);
+
+                this.roomNameInput.popover(<PopoverOptions>{
+                    content: '',
+                    placement: 'above',
+                    trigger: 'manual',
+                    html: true
+                });
+
+                $('#room-name-form').submit(() => {
+                    if (!this.roomNameInput.attr('disabled')) {
+                        this.roomNameInput.popover('hide');
+                        this.client.updateRoomName($('#room-input-name').val().toString());
+                        this.setEditRoomName(false);
+                    }
+                    return false;
+                });
+
+                if (this.game.creator.id != this.client.player.id) {
+                    $('#btn-edit-room-name').hide();
+                    $('#card-footer').hide();
+                } else {
+                    $('#btn-start-game').attr('disabled', 'disabled');
                 }
-                return false;
-            });
 
-            if (this.game.creator.id != this.client.player.id) {
-                $('#btn-edit-room-name').hide();
-                $('#card-footer').hide();
-            } else {
-                $('#btn-start-game').attr('disabled', 'disabled');
-            }
+                this.renderStage4Players();
 
-            this.renderStage4Players();
-        } else if (this.stage == 5) {
-            // TODO Add room name change on stage 5
-            this.board = $('#board');
-            const width = this.board.parent().width();
-            const height = this.board.parent().height();
+                break;
 
-            this.board.attr('width', width);
-            this.board.attr('height', height);
-            this.game.setSize(width, height);
-            this.game.calculatePathPoints();
+            case 5:
+                // TODO Add room name change on stage 5
+                this.board = $('#board');
+                const width = this.board.parent().width();
+                const height = this.board.parent().height();
 
-            $('#room-name').text(this.game.name);
-            if (this.game.currentPlayer.id != this.client.player.id) {
-                $('#btn-launch-dice').attr('disabled', 'disable');
-            }
+                this.board.attr('width', width);
+                this.board.attr('height', height);
+                this.game.setSize(width, height);
+                this.game.calculatePathPoints();
 
-            this.game.dice.forEach((dice, i) => {
-                UIHelper.setDiceImage(i, dice);
-            });
+                $('#room-name').text(this.game.name);
+                if (this.game.currentPlayer.id != this.client.player.id) {
+                    $('#btn-launch-dice').attr('disabled', 'disable');
+                }
 
-            this.renderStage5Players();
-            this.renderBoard();
+                this.game.dice.forEach((dice, i) => {
+                    UIHelper.setDiceImage(i, dice);
+                });
+
+                this.renderStage5Players();
+                this.renderBoard();
+
+                break;
+
+            case 6:
+                $('#room-name').text(this.game.name);
+                this.renderStage6Players();
+
+                break;
         }
     }
 
@@ -268,6 +287,10 @@ export class UIHelper {
         });
     }
 
+    private returnBtnClick(): void {
+        this.setStage(3);
+    }
+
     private renderStage3Players(game: ClientGame): void {
         const playerList = $(`#room-${game.id}`).find(`.player-list`);
         playerList.empty();
@@ -303,6 +326,29 @@ export class UIHelper {
                 }
             } else if (this.game.player.id == player.id) {
                 text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span></span></div>';
+            }
+
+            $(`<div class="d-flex flex-row player">
+                <div class="p-2"><img src="img/${player.color.code}_piece.png"/></div>
+                <div class="p-2"><p class="card-text">${player.name}</p></div>
+                ${text}
+            </div>`).appendTo(playerList);
+        }
+    }
+
+    private renderStage6Players(): void {
+        const playerList = $('#player-list');
+        playerList.empty();
+        for (const player of this.game.players) {
+            let text = '';
+            if (this.game.winner.id === player.id) {
+                if (this.game.player.id == player.id) {
+                    text += '<div class="ml-auto p-2"><span class="badge badge-success"><span class="oi oi-star"></span> Ganador</span></div>';
+                } else {
+                    text += '<div class="ml-auto p-2"><span class="badge badge-success">Ganador</span></div>';
+                }
+            } else if (this.game.player.id == player.id) {
+                text += '<div class="ml-auto p-2"><span class="badge badge-primary"><span class="oi oi-star"></span></span></div>';
             }
 
             $(`<div class="d-flex flex-row player">
@@ -400,13 +446,6 @@ export class UIHelper {
     private renderBoard(): void {
         const width = this.board.width();
         const height = this.board.height();
-        // this.game.players.forEach(player => player.pieces.forEach((p, i) => p.position = i + 1));
-        /*this.game.players.forEach(player => {
-            player.pieces[0].position = 9;
-            player.pieces[1].position = 34;
-            player.pieces[2].position = 28;
-            player.pieces[3].position = 49;
-        });*/
 
         this.game.calculatePiecePositions();
         const pieceRadius = this.game.pieceRadius;
@@ -437,7 +476,7 @@ export class UIHelper {
                     strokeWidth: 2,
                     strokeStyle: secondColor,
                     name: `p-${player.id}-${piece.id}`,
-                    groups: ['pieces', `p-${player.id}`, `p-${player.id}-${piece.id}`],
+                    groups: ['pieces', 'circles', `p-${player.id}`, `p-${player.id}-${piece.id}`],
                     data: {
                         player: player,
                         piece: piece
@@ -464,7 +503,11 @@ export class UIHelper {
                     fontSize: pieceRadius,
                     fontFamily: 'Trebuchet MS, sans-serif',
                     name: `t-${player.id}-${piece.id}`,
-                    groups: ['texts', `t-${player.id}`, `p-${player.id}-${piece.id}`],
+                    groups: ['pieces', 'texts', `t-${player.id}`, `p-${player.id}-${piece.id}`],
+                    data: {
+                        player: player,
+                        piece: piece
+                    }
                 });
             }
 
@@ -482,10 +525,10 @@ export class UIHelper {
         this.game.piecesToMove.forEach((movements, pieceId) => {
             const piece = pieces.find(p => p.id == pieceId);
             const start = new Point(piece.p.x - (movements.length - 1) * pieceRadius, piece.p.y - pieceRadius * 2 - 3);
-            if (start.x + movements.length * pieceRadius < 0) {
-                start.x = movements.length * pieceRadius;
-            } else if (start.x + movements.length * pieceRadius > this.game.width) {
-                start.x = this.game.width - movements.length * pieceRadius;
+            if (start.x - pieceRadius < 0) {
+                start.x = pieceRadius;
+            } else if (start.x + (movements.length * 2 - 1) * pieceRadius > this.game.width) {
+                start.x = this.game.width - (movements.length * 2 - 1) * pieceRadius;
             }
 
             if (start.y < 0) {
@@ -540,11 +583,11 @@ export class UIHelper {
 
     public moviePiece(player: Player, piece: Piece): void {
 
-        this.board.animateLayerGroup(`p-${player.id}-${piece.id}`, {
-            x: piece.p.x,
-            y: piece.p.y
+        this.board.animateLayerGroup(`pieces`, {
+            x: (layer: JCanvasLayerDef) => layer.data.piece.p.x,
+            y: (layer: JCanvasLayerDef) => layer.data.piece.p.y
         }, 500, layer => {
-            if (layer.type == 'ellipse') {
+            if (layer.name == `p-${player.id}-${piece.id}`) {
                 this.client.moveAnimationComplete();
             }
         });
@@ -568,6 +611,17 @@ export class UIHelper {
                 fontStyle: 'bold',
                 fontSize: 15,
                 fontFamily: 'Trebuchet MS, sans-serif'
+            });
+
+            this.board.addLayer({
+                type: 'vector',
+                x: point.x,
+                y: point.y,
+                strokeWidth: 2,
+                strokeStyle: '#F0F',
+                a1: point.dir,
+                l1: 20,
+                inDegrees: false
             });
         }
     }

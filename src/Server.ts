@@ -163,6 +163,7 @@ export class Server {
             game.start();
             console.log(`Game[${game.id}][${game.name}] has started!`);
             game.emitAll("start-game", game.toGame());
+            this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
         });
 
         socket.on("launch-dice", (gameId: number) => {
@@ -244,16 +245,20 @@ export class Server {
     }
 
     private registerPlayer(player: Player): void {
-        const index = this.registeredPlayers.findIndex((p) => p.id === player.id);
-        if (index == -1) {
-            this.registeredPlayers.push(player);
+        if (player) {
+            const index = this.registeredPlayers.findIndex((p) => p.id === player.id);
+            if (index == -1) {
+                this.registeredPlayers.push(player);
+            }
         }
     }
 
     private unregisterPlayer(player: Player): void {
-        const index = this.registeredPlayers.findIndex((p) => p.id === player.id);
-        if (index >= 0) {
-            this.registeredPlayers.splice(index, 1);
+        if (player) {
+            const index = this.registeredPlayers.findIndex((p) => p.id === player.id);
+            if (index >= 0) {
+                this.registeredPlayers.splice(index, 1);
+            }
         }
     }
 

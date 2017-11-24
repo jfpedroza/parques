@@ -19,10 +19,11 @@ interface JCanvasLayerBase {
     name?: string;
     groups?: string[];
     rotate?: number;
+    inDegrees?: boolean;
     translateX?: number;
     translateY?: number;
     visible?: boolean;
-    data?: Object;
+    data?: any;
 
     click?: (layer: any) => void;
     dblclick?: (layer: any) => void;
@@ -107,9 +108,24 @@ interface JCanvasEllipseDef extends JCanvasLayerBase {
     strokeWidth?: number;
 }
 
+interface JCanvasVectorDef extends JCanvasLayerBase {
+    x?: number;
+    y?: number;
+    strokeStyle?: string;
+    strokeWidth?: number;
+    a1?: number;
+    l1?: number;
+    a2?: number;
+    l2?: number;
+    a3?: number;
+    l3?: number;
+    closed?: boolean;
+    rounded?: boolean;
+}
+
 interface JCanvasLayerDef extends JCanvasSliceDef,
     JCanvasTextDef, JCanvasImageDef, JCanvasRectDef,
-    JCanvasEllipseDef {
+    JCanvasEllipseDef, JCanvasVectorDef {
     type?: string;
 }
 
@@ -163,7 +179,7 @@ interface JQuery {
 
     setLayerGroup(name: string, props: JCanvasLayerDef): JQuery;
 
-    animateLayerGroup(name: string, props: JCanvasLayerDef, time?: number, callback?: (layer: JCanvasLayerDef) => void): JQuery;
+    animateLayerGroup(name: string, props: JCanvasLayerDef|any, time?: number, callback?: (layer: JCanvasLayerDef) => void): JQuery;
 }
 
 // note this declare module is necessary to tell TypeScript not to interpret the whole file as one module;

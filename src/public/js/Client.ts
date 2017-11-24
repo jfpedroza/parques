@@ -184,7 +184,12 @@ export class Client {
             console.log(`Move piece ${piece.id} of ${player.name} ${mov} place(s)`);
             this.game.movePiece(player, piece, mov);
             this.ui.moviePiece(player, piece);
+        });
 
+        this.socket.on('winner', (winner: Player) => {
+            this.game.winner = winner;
+            this.game.status = GameStatus.FINISHED;
+            this.ui.setStage(6);
         });
     }
 

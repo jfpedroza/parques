@@ -75,14 +75,6 @@ export namespace Colors {
      */
     export const YELLOW: Color = {name: "Amarillo", code: "yellow", value: "#FFFF00", rotation: 270};
 
-    /**
-     * La constante ALL representa el cambio de color de la carta.
-     *
-     * @const ALL
-     * @type {Color}
-     */
-    export const ALL: Color = {name: "Todos", code: "", value: "#FFF", rotation: 0};
-
     export const ARRAY: Color[] = [RED, GREEN, BLUE, YELLOW];
 
     export function getNext(color: Color): Color {
