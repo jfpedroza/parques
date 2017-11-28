@@ -2,7 +2,7 @@ const chokidar = require('chokidar');
 const shell = require('shelljs');
 const pathModule = require('path');
 
-let htmlWatcher = chokidar.watch(['src/public/index.html', 'src/public/stages/*.html']);
+let htmlWatcher = chokidar.watch(['src/public/index.html', 'src/public/stages/*.html', 'src/public/js/admin/views/*.html']);
 
 htmlWatcher.on('change', function (path) {
     console.log(`${path} changed, copying to dist`);
