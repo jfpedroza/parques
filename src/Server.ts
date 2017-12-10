@@ -185,6 +185,10 @@ export class Server {
             const game = this.getGame(gameId);
             game.moveAnimationComplete(player);
         });
+
+        socket.on("test", () => {
+            socket.emit("test", 3);
+        });
     }
 
     public getPlayer(id: number): Player {

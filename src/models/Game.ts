@@ -76,7 +76,7 @@ export namespace Constants {
      * @const maxPlayers
      * @type {number}
      */
-    export const maxPlayers: number = 5;
+    export const maxPlayers: number = 4;
 
     export const pieceCount: number = 4;
 

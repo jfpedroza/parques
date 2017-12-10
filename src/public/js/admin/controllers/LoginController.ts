@@ -1,11 +1,13 @@
-namespace ParquesAdmin {
-    class LoginController {
-        // static $inject = [];
+declare const angular: any;
 
-        constructor() {
+class LoginController {
+    // static $inject = [];
 
-        }
+    constructor() {
+
     }
-
-    angular.module('ParquesAdmin').controller('LoginController', LoginController);
 }
+
+angular.module('ParquesAdmin').controller('LoginController', LoginController);
+
+export = LoginController;

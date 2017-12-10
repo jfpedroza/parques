@@ -1,7 +1,11 @@
 /// <reference path="../../../../node_modules/@types/angular/index.d.ts" />
 /// <reference path="../../../../node_modules/@types/angular-route/index.d.ts" />
 
-namespace ParquesAdmin {
+declare const angular: any;
 
-    angular.module('ParquesAdmin', ['ngRoute']);
-}
+angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io']);
+
+import "./app.route";
+import "./controllers/IndexController";
+import "./controllers/LoginController";
+import "./services/SocketService";
