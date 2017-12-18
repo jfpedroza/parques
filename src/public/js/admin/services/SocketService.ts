@@ -1,4 +1,5 @@
-declare const angular: any;
+
+declare const angular: ng.IAngularStatic;
 
 class SocketService {
 
@@ -13,7 +14,14 @@ class SocketService {
             ioSocket: socket
         });
 
-        this.socket.forward('test');
+        this.socket.forward('game-list');
+        this.socket.forward('add-game');
+        this.socket.forward('update-game');
+        this.socket.forward('delete-game');
+        this.socket.forward('player-list');
+        this.socket.forward('add-player');
+        this.socket.forward('update-player');
+        this.socket.forward('delete-player');
     }
 
     public emit(event: string, ... args: any[]) {

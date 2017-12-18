@@ -200,6 +200,20 @@ body {
   }
 }
 
+#admin-stage {
+  .card {
+    width: 100%;
+
+    .player-list {
+      .player {
+        img {
+          height: 30px;
+        }
+      }
+    }
+  }
+}
+
 .button {
   background: #00f200;
   background-image: -webkit-linear-gradient(top, #00f200, #025902);

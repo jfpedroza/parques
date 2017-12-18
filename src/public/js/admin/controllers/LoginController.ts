@@ -1,4 +1,5 @@
-declare const angular: any;
+
+declare const angular: ng.IAngularStatic;
 
 class LoginController {
     // static $inject = [];

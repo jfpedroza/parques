@@ -1,4 +1,37 @@
-<div class="container">
-    <h1>Index</h1>
-    <h2>{{testValue}}</h2>
+<div class="container" id="admin-stage">
+    <div class="row">
+        <div class="col-sm-12 col-md-8 col-lg-6">
+            <h3>Rooms</h3>
+            <div class="row">
+                <div class="col-sm-12 col-md-6 col-lg-6 room" ng-repeat="game in ctrl.games">
+                    <div class="card">
+                        <div class="card-header">{{game.id}}</div>
+                        <div class="card-body">
+                            <h4 class="card-title">{{game.name}}</h4>
+                            <h6 class="card-subtitle mb-2 text-muted">{{game.created.toLocaleString()}}</h6>
+                            <h6 class="card-text text-{{ctrl.getGameStatusColor(game)}}">{{ctrl.getGameStatusText(game)}}</h6>
+                            <div class="d-flex flex-column player-list">
+                                <div class="d-flex flex-row player" ng-repeat="player in game.players">
+                                    <div class="p-2"><img ng-src="img/{{player.color.code}}_piece.png"/></div>
+                                    <div class="p-2"><p class="card-text">{{player.name}}</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-primary"><span class="oi oi-eye"></span> See</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-md-4 col-lg-6">
+            <h3>Players</h3>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="player in ctrl.players">
+                    <h4>{{player.name}}</h4>
+                    <span class="badge badge-{{ctrl.getPlayerStatusBadgeColor(player)}} badge-pill">{{ctrl.getPlayerStatusText(player)}}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>

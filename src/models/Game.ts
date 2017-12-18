@@ -8,6 +8,8 @@ export abstract class Game {
 
     name: string;
 
+    created: Date;
+
     status: GameStatus;
 
     creator: Player;
@@ -26,6 +28,7 @@ export abstract class Game {
         return <Game>{
             id: this.id,
             name: this.name,
+            created: this.created,
             status: this.status,
             creator: this.creator,
             players: this.players,

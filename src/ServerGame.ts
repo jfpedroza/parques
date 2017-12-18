@@ -31,6 +31,7 @@ export class ServerGame extends Game {
         this.id = new Date().getTime();
         // this.name = this.id.toString();
         this.name = "Nueva Sala";
+        this.created = new Date();
         this.status = GameStatus.CREATED;
         this.creator = creator;
         this.players = [];

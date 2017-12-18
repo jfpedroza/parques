@@ -1,7 +1,7 @@
 /// <reference path="../../../../node_modules/@types/angular/index.d.ts" />
 /// <reference path="../../../../node_modules/@types/angular-route/index.d.ts" />
 
-declare const angular: any;
+declare const angular: ng.IAngularStatic;
 
 angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io']);
 

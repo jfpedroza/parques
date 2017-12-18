@@ -31,6 +31,7 @@ export class ClientGame extends Game {
         super();
         this.id = game.id;
         this.name = game.name;
+        this.created = game.created;
         this.status = game.status;
         this.creator = game.creator;
         this.players = game.players;

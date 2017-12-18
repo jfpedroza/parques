@@ -15,11 +15,14 @@ export class Server {
 
     private registeredPlayers: Player[];
 
+    private adminSockets: Set<Socket>;
+
     public constructor() {
         this.players = [];
         this.games = [];
         this.sockets = new Map<Player, Socket>();
         this.registeredPlayers = [];
+        this.adminSockets = new Set();
     }
 
     public onConnection(socket: Socket) {
@@ -32,6 +35,10 @@ export class Server {
                 player.status = PlayerStatus.DISCONNECTED;
                 console.log(`${player.name} has disconnected`);
                 // TODO Notify other players in the room about disconnection and connection
+                this.emitAdmins('update-player', player);
+            } else if (this.adminSockets.has(socket)) {
+                this.adminSockets.delete(socket);
+                console.log("An admin has disconnected");
             } else {
                 console.log("A client has disconnected");
             }
@@ -47,11 +54,12 @@ export class Server {
             player = null;
 
             const id = parseInt(ply);
-            if (isNaN(id)) {
+            if (isNaN(id)) { // TODO Change this condition to allow numeric nicknames
                 player = this.players.find((p) => p.name == ply);
                 if (!player) {
                     player = new Player(new Date().getTime(), ply);
                     this.players.push(player);
+                    this.emitAdmins('add-player', player);
                 } else if (player.status == PlayerStatus.CONNECTED) {
                     player = null;
                 }
@@ -60,6 +68,7 @@ export class Server {
                 if (player) {
                     if (player.status == PlayerStatus.DISCONNECTED) {
                         player.status = PlayerStatus.CONNECTED;
+                        this.emitAdmins('update-player', player);
                     } else {
                         player = null;
                     }
@@ -90,6 +99,7 @@ export class Server {
             });
 
             console.log(`${player.name} has logged out`);
+            this.emitAdmins('delete-player', player);
         });
 
         socket.on("create-room", () => {
@@ -100,6 +110,7 @@ export class Server {
             socket.emit("room-creation", game.toGame(), player.color);
             this.unregisterPlayer(player);
             this.emitAll(this.registeredPlayers, "new-room", game.toGame());
+            this.emitAdmins('add-game', game.toGame());
         });
 
         socket.on("update-room-name", (g: Game) => {
@@ -108,6 +119,7 @@ export class Server {
             game.name = g.name;
             game.emitAllBut(player, "update-room", game.toGame(), "name");
             this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "name");
+            this.emitAdmins('update-game', game.toGame());
         });
 
         socket.on("new-rooms-list", () => {
@@ -132,6 +144,8 @@ export class Server {
                     } else {
                         this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
                     }
+
+                    this.emitAdmins('update-game', game.toGame());
                 } else {
                     errorMessage = "Se ha alcanzado el máximo de jugadores";
                     error = true;
@@ -164,30 +178,38 @@ export class Server {
             console.log(`Game[${game.id}][${game.name}] has started!`);
             game.emitAll("start-game", game.toGame());
             this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
+            this.emitAdmins('update-game', game.toGame());
         });
 
         socket.on("launch-dice", (gameId: number) => {
             const game = this.getGame(gameId);
             game.launchDice();
+            this.emitAdmins('update-game', game.toGame());
         });
 
         socket.on("dice-animation-complete", (gameId: number) => {
             const game = this.getGame(gameId);
             game.diceAnimationComplete(player);
+            this.emitAdmins('update-game', game.toGame());
         });
 
         socket.on("move-piece", (gameId: number, piece: Piece, mov: number) => {
             const game = this.getGame(gameId);
             game.movePiece(player, piece, mov);
+            this.emitAdmins('update-game', game.toGame());
         });
 
         socket.on("move-animation-complete", (gameId: number) => {
             const game = this.getGame(gameId);
             game.moveAnimationComplete(player);
+            this.emitAdmins('update-game', game.toGame());
         });
 
-        socket.on("test", () => {
-            socket.emit("test", 3);
+        socket.on("register-admin", () => {
+            this.adminSockets.add(socket);
+            socket.emit("game-list", this.games.map(game => game.toGame()));
+            socket.emit("player-list", this.players);
+            console.log("An admin has registered");
         });
     }
 
@@ -241,10 +263,12 @@ export class Server {
             } else {
                 this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "players");
             }
+            this.emitAdmins('update-game', game.toGame());
         } else {
             this.removeGame(game);
             console.log(`Room[${game.id}][${game.name}] has 0 players, deleted`);
             this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
+            this.emitAdmins('delete-game', game.toGame());
         }
     }
 
@@ -290,4 +314,9 @@ export class Server {
         });
     }
 
+    public emitAdmins(event: string, ... args: any[]) {
+        this.adminSockets.forEach(socket => {
+            socket.emit(event, ... args);
+        });
+    }
 }
