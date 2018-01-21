@@ -206,10 +206,18 @@ export class Server {
         });
 
         socket.on("register-admin", () => {
-            this.adminSockets.add(socket);
+            if (!this.adminSockets.has(socket)) {
+                this.adminSockets.add(socket);
+                console.log("An admin has registered");
+            }
+
             socket.emit("game-list", this.games.map(game => game.toGame()));
             socket.emit("player-list", this.players);
-            console.log("An admin has registered");
+        });
+
+        socket.on("get-game", (gameId: number) => {
+            const game = this.getGame(gameId);
+            socket.emit('update-game', game.toGame());
         });
     }
 

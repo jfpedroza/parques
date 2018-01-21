@@ -10,6 +10,10 @@ const routes = ($routeProvider: ng.route.IRouteProvider) => {
         templateUrl: 'js/admin/views/login.html',
         controller: 'LoginController',
         controllerAs: 'ctrl'
+    }).when('/room/:roomId', {
+        templateUrl: 'js/admin/views/room.html',
+        controller: 'RoomController',
+        controllerAs: 'ctrl'
     }).otherwise({
         redirectTo: '/'
     });

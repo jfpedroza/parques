@@ -8,4 +8,5 @@ angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io']);
 import "./app.route";
 import "./controllers/IndexController";
 import "./controllers/LoginController";
+import "./controllers/RoomController";
 import "./services/SocketService";

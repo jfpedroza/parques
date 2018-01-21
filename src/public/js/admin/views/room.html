@@ -1,0 +1,22 @@
+<div class="container" id="admin-stage">
+    <div class="col-sm-6 col-md-4 col-lg-3 room">
+        <div class="card">
+            <div class="card-header">{{ctrl.room.id}}</div>
+            <div class="card-body">
+                <h4 class="card-title">{{ctrl.room.name}}</h4>
+                <h6 class="card-subtitle mb-2 text-muted">{{ctrl.room.created.toLocaleString()}}</h6>
+                <h6 class="card-text text-{{ctrl.getGameStatusColor(ctrl.room)}}">{{ctrl.getGameStatusText(ctrl.room)}}</h6>
+                <div class="d-flex flex-column player-list">
+                    <div class="d-flex flex-row player" ng-repeat="player in ctrl.room.players">
+                        <div class="p-2"><img ng-src="img/{{player.color.code}}_piece.png"/></div>
+                        <div class="p-2"><p class="card-text">{{player.name}}</p></div>
+                        <div ng-if="ctrl.room.currentPlayer.id === player.id" class="ml-auto p-2"><span class="badge badge-success">Turno</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a class="btn btn-primary" ng-href="#!/"><span class="oi oi-chevron-left"></span> Back</a>
+            </div>
+        </div>
+    </div>
+</div>
