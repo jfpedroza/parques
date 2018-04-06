@@ -217,7 +217,11 @@ export class Server {
 
         socket.on("get-game", (gameId: number) => {
             const game = this.getGame(gameId);
-            socket.emit('update-game', game.toGame());
+            if (game) {
+                socket.emit('update-game', game.toGame());
+            } else {
+                socket.emit('update-game');
+            }
         });
     }
 

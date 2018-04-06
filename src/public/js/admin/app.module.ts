@@ -3,7 +3,7 @@
 
 declare const angular: ng.IAngularStatic;
 
-angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io']);
+angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io', 'jqwidgets']);
 
 import "./app.route";
 import "./controllers/IndexController";

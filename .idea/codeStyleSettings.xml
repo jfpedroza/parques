@@ -10,8 +10,13 @@
           <option name="CLASS_BRACE_STYLE" value="1" />
           <option name="METHOD_BRACE_STYLE" value="1" />
         </codeStyleSettings>
+        <codeStyleSettings language="SCSS">
+          <indentOptions>
+            <option name="INDENT_SIZE" value="4" />
+          </indentOptions>
+        </codeStyleSettings>
       </value>
     </option>
-    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+    <option name="PREFERRED_PROJECT_CODE_STYLE" value="Default" />
   </component>
 </project>
