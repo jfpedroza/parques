@@ -3,7 +3,10 @@
 
 declare const angular: ng.IAngularStatic;
 
-angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io', 'jqwidgets']);
+angular.module('ParquesAdmin', ['ngRoute', 'btford.socket-io', 'jqwidgets', 'jsonFormatter'])
+    .config((JSONFormatterConfigProvider: any) => {
+        JSONFormatterConfigProvider.hoverPreviewEnabled = true;
+    });
 
 import "./app.route";
 import "./controllers/IndexController";

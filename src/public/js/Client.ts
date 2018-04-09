@@ -183,6 +183,15 @@ export class Client {
             piece = player.pieces.find(p => p.id == piece.id);
             console.log(`Move piece ${piece.id} of ${player.name} ${mov} place(s)`);
             this.game.movePiece(player, piece, mov);
+            const invalidPiecePositions = this.game.validatePiecePositions();
+            if (invalidPiecePositions.size > 0) {
+                UIHelper.showNotification({
+                    title: 'Error validating piece positions',
+                    message: `Number of errors: ` + invalidPiecePositions.size,
+                    type: NotificationTypes.Error
+                });
+            }
+
             this.ui.moviePiece(player, piece);
         });
 
@@ -190,6 +199,25 @@ export class Client {
             this.game.winner = winner;
             this.game.status = GameStatus.FINISHED;
             this.ui.setStage(6);
+        });
+
+        this.socket.on('request-data', (message: string) => {
+            console.log(`Data request received, message=${message}`);
+            let data: any;
+            switch (message) {
+                case 'path-points':
+                    data = {};
+                    this.game.pathPoints.forEach((point, pos) => {
+                        data[pos] = point;
+                    });
+
+                    break;
+                case 'piece-positions':
+                    data = this.game.players;
+                    break;
+            }
+
+            this.socket.emit('requested-data', this.game.id, message, data);
         });
     }
 

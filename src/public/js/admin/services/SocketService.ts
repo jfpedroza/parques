@@ -22,6 +22,7 @@ class SocketService {
         this.socket.forward('add-player');
         this.socket.forward('update-player');
         this.socket.forward('delete-player');
+        this.socket.forward('requested-data');
     }
 
     public emit(event: string, ... args: any[]) {

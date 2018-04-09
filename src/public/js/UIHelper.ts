@@ -2,7 +2,7 @@
 import {Client} from "./Client";
 import Timer = NodeJS.Timer;
 import {ClientGame} from "./ClientGame";
-import {NotifPositions, ToastrNotification} from "../../models/Notification";
+import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
 import {Constants} from "../../models/Game";
 import {Piece, PiecePositions} from "../../models/Piece";
 import {Colors} from "../../models/Color";
@@ -166,6 +166,14 @@ export class UIHelper {
                 this.board.attr('height', height);
                 this.game.setSize(width, height);
                 this.game.calculatePathPoints();
+                const invalidPathPoints = this.game.validatePathPoints();
+                if (invalidPathPoints.size > 0) {
+                    UIHelper.showNotification({
+                        title: 'Error validating path points',
+                        message: `Number of errors: ` + invalidPathPoints.size,
+                        type: NotificationTypes.Error
+                    });
+                }
 
                 $('#room-name').text(this.game.name);
                 if (this.game.currentPlayer.id != this.client.player.id) {
@@ -448,6 +456,15 @@ export class UIHelper {
         const height = this.board.height();
 
         this.game.calculatePiecePositions();
+        const invalidPiecePositions = this.game.validatePiecePositions();
+        if (invalidPiecePositions.size > 0) {
+            UIHelper.showNotification({
+                title: 'Error validating piece positions',
+                message: `Number of errors: ` + invalidPiecePositions.size,
+                type: NotificationTypes.Error
+            });
+        }
+
         const pieceRadius = this.game.pieceRadius;
         const center = this.game.center;
 

@@ -8,10 +8,22 @@
                     <h6 class="card-subtitle mb-2 text-muted">{{ctrl.room.created.toLocaleString()}}</h6>
                     <h6 class="card-text text-{{ctrl.getGameStatusColor(ctrl.room)}}">{{ctrl.getGameStatusText(ctrl.room)}}</h6>
                     <div class="d-flex flex-column player-list">
-                        <div class="d-flex flex-row player" ng-repeat="player in ctrl.room.players">
-                            <div class="p-2"><img ng-src="img/{{player.color.code}}_piece.png"/></div>
-                            <div class="p-2"><p class="card-text">{{player.name}}</p></div>
-                            <div ng-if="ctrl.room.currentPlayer.id === player.id" class="ml-auto p-2"><span class="badge badge-success">Turno</span></div>
+                        <div ng-repeat="player in ctrl.room.players track by $index">
+                            <div class="d-flex flex-row player" ng-click="ctrl.togglePlayerPieces(player)">
+                                <div class="p-2"><img ng-src="img/{{player.color.code}}_piece.png"/></div>
+                                <div class="p-2"><p class="card-text">{{player.name}}</p></div>
+                                <div ng-if="ctrl.room.currentPlayer.id === player.id" class="ml-auto p-2"><span class="badge badge-success">Turno</span></div>
+                            </div>
+                            <div class="d-flex flex-column piece-list" ng-if="ctrl.showPlayerPieces(ctrl.room, player)">
+                                <div class="btn-group" role="group" aria-label="Player Toolbar">
+                                    <button class="btn btn-secondary" ng-click="ctrl.requestData(player, 'path-points')"><span class="oi oi-map"></span></button>
+                                    <button class="btn btn-secondary" ng-click="ctrl.requestData(player, 'piece-positions')"><span class="oi oi-map-marker"></span></button>
+                                </div>
+                                <div class="d-flex flex-row piece" ng-repeat="piece in player.pieces track by $index">
+                                    <div class="p-2"><img ng-src="img/{{player.color.code}}_piece.png"/></div>
+                                    <div class="p-2"><p class="card-text">Piece {{piece.id}}: {{piece.position}}</p></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -22,7 +34,11 @@
         </div>
         <div class="col-sm-6 col-md-8 col-lg-9">
             <jqx-splitter jqx-settings="ctrl.splitterSettings">
-                <div>Panel 1</div>
+                <div id="json-viewer">
+                    <h5>JSON Viewer</h5>
+                    <h6>{{ctrl.jsonViewerText}}</h6>
+                    <json-formatter json="ctrl.json" open="1"></json-formatter>
+                </div>
                 <div>Panel 2</div>
             </jqx-splitter>
         </div>

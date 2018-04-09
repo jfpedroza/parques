@@ -26,7 +26,8 @@ export class Server {
     }
 
     public onConnection(socket: Socket) {
-        console.log("A new client has connected");
+        console.log(`A new client has connected. IP = ${socket.conn.remoteAddress}`);
+
         let player: Player = null;
 
         socket.on("disconnect", () => {
@@ -222,6 +223,18 @@ export class Server {
             } else {
                 socket.emit('update-game');
             }
+        });
+
+        socket.on("request-data", (gameId: number, player: Player, message: string) => {
+            const game = this.getGame(gameId);
+            player = game.players.find(p => p.id == player.id);
+            console.log(`Requesting data to player '${player.name} of game ${gameId}, message=${message}`);
+            game.emit(player, "request-data", message);
+        });
+
+        socket.on("requested-data", (gameId: number, message: string, data: any) => {
+            console.log(`Received requested data for game ${gameId}, message=${message}`);
+            this.emitAdmins("requested-data", gameId, message, data);
         });
     }
 

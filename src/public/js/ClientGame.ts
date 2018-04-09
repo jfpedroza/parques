@@ -40,7 +40,7 @@ export class ClientGame extends Game {
         this.player = player;
     }
 
-    public update(game: Game, type: string) {
+    public update(game: Game, type: string): void {
         if (type == 'name') {
             this.name = game.name;
         } else if (type == 'players') {
@@ -57,7 +57,7 @@ export class ClientGame extends Game {
         this.dice = game.dice;
     }
 
-    public setSize(width: number, height: number) {
+    public setSize(width: number, height: number): void {
         this.width = width;
         this.height = height;
 
@@ -69,7 +69,7 @@ export class ClientGame extends Game {
         this.center = new Point(this.width / 2, this.height / 2);
     }
 
-    public calculatePathPoints() {
+    public calculatePathPoints(): void {
         this.pathPoints = new Map();
         const dstart = (this.width - this.jailSize * 2) / 3;
         const xstart = this.width - this.pieceRadius;
@@ -117,7 +117,24 @@ export class ClientGame extends Game {
         points.forEach((p, i) => this.pathPoints.set(i, p));
     }
 
-    public calculatePiecePositions() {
+    public validatePathPoints(): Map<number, Point> {
+        console.log(`Validating path points...`);
+        const invalidPathPoints = new Map<number, Point>();
+        this.pathPoints.forEach((point, pos) => {
+            if (point.x < 0 || point.x >= this.width) {
+                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y})`);
+                invalidPathPoints.set(pos, point);
+            } else if (point.y < 0 || point.y >= this.height) {
+                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y})`);
+                invalidPathPoints.set(pos, point);
+            }
+        });
+
+        console.log(`Validation finished.`);
+        return invalidPathPoints;
+    }
+
+    public calculatePiecePositions(): void {
 
         for (const player of this.players) {
 
@@ -221,6 +238,33 @@ export class ClientGame extends Game {
                 piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
             });
         }*/
+    }
+
+    public validatePiecePositions(): Map<Player, Piece[]> {
+        console.log(`Validating piece positions...`);
+        const invalidPiecePositions = new Map<Player, Piece[]>();
+        this.players.forEach(player => {
+            player.pieces.forEach(piece => {
+                if (piece.p.x < 0 || piece.p.x >= this.width) {
+                    console.log(`Invalid piece position: player=${player.name} piece=${piece.id} pos=${piece.position} point=(${piece.p.x}, ${piece.p.y})`);
+                    if (!invalidPiecePositions.has(player)) {
+                        invalidPiecePositions.set(player, []);
+                    }
+
+                    invalidPiecePositions.get(player).push(piece);
+                } else if (piece.p.y < 0 || piece.p.y >= this.height) {
+                    console.log(`Invalid piece position: player=${player.name} piece=${piece.id} pos=${piece.position} point=(${piece.p.x}, ${piece.p.y})`);
+                    if (!invalidPiecePositions.has(player)) {
+                        invalidPiecePositions.set(player, []);
+                    }
+
+                    invalidPiecePositions.get(player).push(piece);
+                }
+            });
+        });
+
+        console.log(`Validation finished.`);
+        return invalidPiecePositions;
     }
 
     public movePiece(player: Player, piece: Piece, mov: number): void {

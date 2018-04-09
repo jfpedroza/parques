@@ -211,6 +211,23 @@ body {
                 }
             }
         }
+
+        .piece-list {
+            .piece {
+                margin-left: 1.5em;
+                img {
+                    height: 25px;
+                }
+            }
+        }
+    }
+}
+
+#json-viewer {
+    padding: 15px;
+
+    h5, h6 {
+        text-align: center;
     }
 }
 
