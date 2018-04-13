@@ -98,12 +98,12 @@ export class ClientGame extends Game {
             }
 
             for (let i = 0; i < 5; i++) {
-                const point = new Point(xstart - this.pieceRadius * 4 * 2 + this.pieceRadius * i * 2, this.center.y + dstart, Math.PI / 2);
+                const point = new Point(xstart - this.pieceRadius * 4 * 2 + this.pieceRadius * i * 2, this.center.y + dstart, -Math.PI / 2);
                 point.rotate(this.center, - j * Math.PI / 2);
                 points.push(point);
             }
 
-            const point = new Point(xstart, this.center.y);
+            const point = new Point(xstart, this.center.y, -Math.PI / 2);
             point.rotate(this.center, - j * Math.PI / 2);
             points.push(point);
         }
@@ -122,10 +122,13 @@ export class ClientGame extends Game {
         const invalidPathPoints = new Map<number, Point>();
         this.pathPoints.forEach((point, pos) => {
             if (point.x < 0 || point.x >= this.width) {
-                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y})`);
+                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
                 invalidPathPoints.set(pos, point);
             } else if (point.y < 0 || point.y >= this.height) {
-                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y})`);
+                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
+                invalidPathPoints.set(pos, point);
+            } else if (isNaN(point.dir)) {
+                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
                 invalidPathPoints.set(pos, point);
             }
         });
@@ -202,42 +205,6 @@ export class ClientGame extends Game {
                 i++;
             });
         }
-
-        /************************************ OLD WAY ********************************/
-
-        /*for (const player of this.players) {
-
-            {
-                const jailPieces = player.pieces.filter(p => p.position == PiecePositions.JAIL);
-                const x = this.width - this.jailSize / 2 - (jailPieces.length - 1) * this.pieceRadius;
-                const y = this.height - this.jailSize / 2;
-
-                jailPieces.forEach((piece, i) => {
-                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
-                });
-            }
-
-            {
-                const endPieces = player.pieces.filter(p => p.position == PiecePositions.END);
-                const x = this.width / 2 - (endPieces.length - 1) * this.pieceRadius;
-                const y = this.height / 2 + this.centerRadius * 0.8;
-
-                endPieces.forEach((piece, i) => {
-                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
-                });
-            }
-
-            {
-                const pieces = player.pieces.filter(p => p.position != PiecePositions.JAIL && p.position != PiecePositions.END);
-                pieces.forEach(piece => {
-                    piece.p = Point.copy(this.pathPoints.get(piece.position));
-                });
-            }
-
-            player.pieces.forEach(piece => {
-                piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
-            });
-        }*/
     }
 
     public validatePiecePositions(): Map<Player, Piece[]> {
@@ -268,11 +235,6 @@ export class ClientGame extends Game {
     }
 
     public movePiece(player: Player, piece: Piece, mov: number): void {
-        /*const pos = this.calculateNextPosition(piece, mov);
-        const point = Point.copy(this.pathPoints.get(pos));
-        point.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
-        piece.position = pos;
-        piece.p = point;*/
         piece.position = this.calculateNextPosition(piece, mov);
         this.calculatePiecePositions();
     }

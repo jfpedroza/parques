@@ -14,15 +14,17 @@ export class Point {
     }
 
     public rotate(c: Point, angle: number): void {
-        // const sign = this.dir > 0? 1 : -1;
 
         const r = 4;
         const rotated = Point.rotatePoint(this, c, angle);
-        const rotatedDir = Point.rotatePoint(Point.rotatePoint(new Point(this.x, this.y - r), this, (this.dir)), c, angle);
+        const rotatedDir = Point.rotatePoint(Point.rotatePoint(new Point(this.x, this.y - r), this, this.dir), c, angle);
 
         this.x = rotated.x;
         this.y = rotated.y;
-        this.dir = Math.asin((this.x - rotatedDir.x) / r);
+
+        const dx = rotatedDir.x - this.x;
+        const dy = this.y - rotatedDir.y;
+        this.dir = Math.atan2(dx, dy);
     }
 
     public static copy(another: Point): Point {
