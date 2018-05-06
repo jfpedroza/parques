@@ -58,6 +58,7 @@ export class UIHelper {
     }
 
     public setStage(stage: number, callback?: () => void): void {
+        console.log(`Changing stage... current=${this.stage}, new=${stage}, callback=${callback ? 'yes' : 'no'}`);
         if (this.stage != stage) {
             this.stage = stage;
             this.setLoading(true);
@@ -296,7 +297,9 @@ export class UIHelper {
     }
 
     private returnBtnClick(): void {
-        this.setStage(3);
+        $('body').on('click', '#btn-return', () => {
+            this.setStage(3);
+        });
     }
 
     private renderStage3Players(game: ClientGame): void {
