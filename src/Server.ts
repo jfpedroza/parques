@@ -4,6 +4,7 @@ import {Player, PlayerStatus} from "./models/Player";
 import {ServerGame} from "./ServerGame";
 import {Constants, Game, GameStatus} from "./models/Game";
 import {Piece} from "./models/Piece";
+import {isNumeric} from "tslint";
 
 export class Server {
 
@@ -50,21 +51,22 @@ export class Server {
             socket.emit("check-username", used);
         });
 
-        socket.on("log-in", (ply: string) => {
+        socket.on("log-in", (id: number, name: string) => {
             let game: Game;
             player = null;
 
-            const id = parseInt(ply);
-            if (isNaN(id)) { // TODO Change this condition to allow numeric nicknames
-                player = this.players.find((p) => p.name == ply);
+            if (id === null) {
+                console.log(`Trying to log in with name=${name}`);
+                player = this.players.find((p) => p.name == name);
                 if (!player) {
-                    player = new Player(new Date().getTime(), ply);
+                    player = new Player(new Date().getTime(), name);
                     this.players.push(player);
                     this.emitAdmins('add-player', player);
                 } else if (player.status == PlayerStatus.CONNECTED) {
                     player = null;
                 }
             } else {
+                console.log(`Trying to log in with id=${id}`);
                 player = this.getPlayer(id);
                 if (player) {
                     if (player.status == PlayerStatus.DISCONNECTED) {
@@ -84,7 +86,7 @@ export class Server {
                     game = nonFinished[0].toGame();
                 }
             } else {
-                console.log(`${ply} tried to log in`);
+                console.log(`Log-in failed: id=${id}, name=${name}`);
             }
 
             socket.emit("log-in", player, game);
@@ -235,6 +237,35 @@ export class Server {
         socket.on("requested-data", (gameId: number, message: string, data: any) => {
             console.log(`Received requested data for game ${gameId}, message=${message}`);
             this.emitAdmins("requested-data", gameId, message, data);
+        });
+
+        socket.on("restart", (player: Player) => {
+            player = this.getPlayer(player.id);
+            if (player) {
+                console.log(`Restarting player ${player.name}`);
+                this.emit(player, "restart");
+            }
+        });
+
+        socket.on("restart-all", () => {
+            console.log(`Restarting all the players`);
+            this.emitAll(this.players, "restart");
+        });
+
+        socket.on("delete-player", (player: Player) => {
+            player = this.getPlayer(player.id);
+            if (player) {
+                this.removePlayer(player);
+                this.unregisterPlayer(player);
+                this.sockets.delete(player);
+                const nonFinished = this.getGames(player).filter(g => g.status != GameStatus.FINISHED);
+                nonFinished.forEach((game) => {
+                    this.leaveRoom(player, game);
+                });
+
+                console.log(`Player ${player.name} has been deleted`);
+                this.emitAdmins('delete-player', player);
+            }
         });
     }
 

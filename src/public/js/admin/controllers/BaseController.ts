@@ -42,6 +42,14 @@ class BaseController {
     getGameStatusText(game: Game): string {
         return GameStatus[game.status];
     }
+
+    isPlayerConnected(player: Player): boolean {
+        return player.status == PlayerStatus.CONNECTED;
+    }
+
+    isPlayerDisconnected(player: Player): boolean {
+        return player.status == PlayerStatus.DISCONNECTED;
+    }
 }
 
 export = BaseController;

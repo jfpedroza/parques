@@ -29,7 +29,7 @@ export class Client {
         this.listen();
         this.ui.configure();
 
-        const playerId = Cookies.get('player-id');
+        const playerId = parseInt(Cookies.get('player-id'));
         if (playerId) {
             this.tryLogIn(playerId);
         } else {
@@ -225,9 +225,9 @@ export class Client {
         this.socket.emit('check-username', username);
     }
 
-    public tryLogIn(ply: string|number): void {
-        console.log('Trying to log in: ' + ply);
-        this.socket.emit('log-in', ply);
+    public tryLogIn(id: number, name?: string): void {
+        console.log(`Trying to log in: id=${id}, name=${name}`);
+        this.socket.emit('log-in', id, name);
     }
 
     public logOut(): void {

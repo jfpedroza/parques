@@ -15,8 +15,12 @@ class IndexController extends BaseController {
 
     players: Player[];
 
+    socketSerivce: SocketService;
+
     constructor($scope: IndexScope, socketService: SocketService) {
         super();
+
+        this.socketSerivce = socketService;
         this.games = [];
         this.players = [];
 
@@ -76,6 +80,14 @@ class IndexController extends BaseController {
         });
 
         socketService.emit('register-admin');
+    }
+
+    restart(player: Player): void {
+        this.socketSerivce.emit('restart', player);
+    }
+
+    delete(player: Player): void {
+        this.socketSerivce.emit('delete-player', player);
     }
 }
 

@@ -112,7 +112,7 @@ export class UIHelper {
 
                 $("#log-in-form").submit(() => {
                     this.username.popover('hide');
-                    this.client.tryLogIn(this.username.val() as string);
+                    this.client.tryLogIn(null, this.username.val() as string);
                     $('#btn-log-in').attr('disabled', 'disabled');
 
                     return false;
