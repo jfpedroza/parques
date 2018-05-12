@@ -101,7 +101,7 @@ export class ServerGame extends Game {
 
         this.diceRemaining = dice.reduce((a, b) => a + b);
 
-        console.log(`Game[${this.id}][${this.name}] - ${this.currentPlayer.name} got [${dice.join(', ')}] = ${this.diceRemaining}`);
+        this.log(`${this.currentPlayer.name} got [${dice.join(', ')}] = ${this.diceRemaining}`);
 
         const same = this.enabledDice == 1 ? false : this.dice.every(dice => dice == this.dice[0]);
         this.repeat = false;
@@ -153,7 +153,7 @@ export class ServerGame extends Game {
                     pieces[pId] = movs;
                 });
 
-                console.log("Pieces to move: ", pieces);
+                this.log("pieces to move: ", pieces);
                 this.emit(player, "enable-pieces", pieces);
             }
         } else if (this.winner) {
@@ -215,7 +215,7 @@ export class ServerGame extends Game {
         if (player.pieces.every(p => p.position == PiecePositions.END)) {
             this.winner = player;
             this.status = GameStatus.FINISHED;
-            console.log(`Game[${this.id}][${this.name}] has finished! Winner: ${this.winner.name}`);
+            this.log(`has finished! Winner: ${this.winner.name}`);
         } else if (this.piecesToMove.size == 0 && !this.repeat && !this.allPiecesInJail) {
             this.currentPlayer = this.getNextPlayer();
         }

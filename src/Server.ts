@@ -4,7 +4,6 @@ import {Player, PlayerStatus} from "./models/Player";
 import {ServerGame} from "./ServerGame";
 import {Constants, Game, GameStatus} from "./models/Game";
 import {Piece} from "./models/Piece";
-import {isNumeric} from "tslint";
 
 export class Server {
 
@@ -108,7 +107,7 @@ export class Server {
         socket.on("create-room", () => {
             const game = new ServerGame(this, player);
             this.games.push(game);
-            console.log(`New room[${game.id}] created by ${player.name}`);
+            game.log(`was created by ${player.name}`);
 
             socket.emit("room-creation", game.toGame(), player.color);
             this.unregisterPlayer(player);
@@ -118,7 +117,7 @@ export class Server {
 
         socket.on("update-room-name", (g: Game) => {
             const game = this.getGame(g.id);
-            console.log(`Room[${game.id}] name was changed: ${game.name} -> ${g.name}`);
+            game.log(`name was changed to ${g.name}`);
             game.name = g.name;
             game.emitAllBut(player, "update-room", game.toGame(), "name");
             this.emitAll(this.registeredPlayers, "update-room", game.toGame(), "name");
@@ -139,7 +138,7 @@ export class Server {
                 error = true;
             } else {
                 if (game.addPlayer(player)) {
-                    console.log(`${player.name} has joined to room[${game.id}][${game.name}]`);
+                    game.log(`${player.name} has joined`);
                     game.emitAllBut(player, "update-room", game.toGame(), "players");
                     this.unregisterPlayer(player);
                     if (game.players.length < Constants.maxPlayers) {
@@ -178,7 +177,7 @@ export class Server {
         socket.on("start-game", (gameId: number) => {
             const game = this.getGame(gameId);
             game.start();
-            console.log(`Game[${game.id}][${game.name}] has started!`);
+            game.log(`has started!`);
             game.emitAll("start-game", game.toGame());
             this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
             this.emitAdmins('update-game', game.toGame());
@@ -306,11 +305,11 @@ export class Server {
 
     private leaveRoom(player: Player, game: ServerGame) {
         game.removePlayer(player);
-        console.log(`${player.name} left room[${game.id}][${game.name}]`);
+        game.log(`${player.name} left`);
         if (game.players.length > 0) {
             if (game.creator.id == player.id) {
                 game.creator = game.players[0];
-                console.log(`Creator rights have passed to ${game.creator.name}`);
+                game.log(`creator rights have passed to ${game.creator.name}`);
             }
 
             game.emitAll("update-room", game.toGame(), "players");
@@ -322,7 +321,7 @@ export class Server {
             this.emitAdmins('update-game', game.toGame());
         } else {
             this.removeGame(game);
-            console.log(`Room[${game.id}][${game.name}] has 0 players, deleted`);
+            game.log(`has 0 players, deleted`);
             this.emitAll(this.registeredPlayers, "delete-room", game.toGame());
             this.emitAdmins('delete-game', game.toGame());
         }

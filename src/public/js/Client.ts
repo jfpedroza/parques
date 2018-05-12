@@ -150,7 +150,7 @@ export class Client {
             const complete: boolean[] = Array(this.game.enabledDice).fill(false);
             for (let i = 0; i < this.game.enabledDice; i++) {
                 this.ui.startAnimation(i, turns[i], 0, () => {
-                    console.log(`Animation dice #${i + 1} completed`);
+                    this.game.log(`animation dice #${i + 1} completed`);
                     complete[i] = true;
                     if (complete.every(c => c)) {
                         this.socket.emit('dice-animation-complete', this.game.id);
@@ -173,7 +173,7 @@ export class Client {
                 }
             });
 
-            console.log('Enable pieces', map);
+            this.game.log('enable pieces', map);
             this.game.piecesToMove = map;
             this.ui.updatePiecesToMove();
         });
@@ -181,7 +181,7 @@ export class Client {
         this.socket.on('move-piece', (player: Player, piece: Piece, mov: number) => {
             player = this.game.players.find(p => p.id == player.id);
             piece = player.pieces.find(p => p.id == piece.id);
-            console.log(`Move piece ${piece.id} of ${player.name} ${mov} place(s)`);
+            this.game.log(`move piece ${piece.id} of ${player.name} ${mov} place(s)`);
             this.game.movePiece(player, piece, mov);
             const invalidPiecePositions = this.game.validatePiecePositions();
             if (invalidPiecePositions.size > 0) {

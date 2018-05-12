@@ -53,6 +53,10 @@ export abstract class Game {
     public allInJail(player: Player): boolean {
         return player.pieces.every(p => p.position == PiecePositions.JAIL);
     }
+
+    public log(message: any, ... rest: any[]): void {
+        console.log(`Game[${this.id}][${this.name}]: ${message}`, ... rest);
+    }
 }
 
 export enum GameStatus {
