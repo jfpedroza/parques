@@ -7,7 +7,6 @@ import {Constants, Game, GameStatus} from "../../models/Game";
 import {ClientGame} from "./ClientGame";
 import {Color} from "../../models/Color";
 import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
-import diceCount = Constants.diceCount;
 import {Piece} from "../../models/Piece";
 
 export class Client {
@@ -148,8 +147,8 @@ export class Client {
         });
 
         this.socket.on('do-launch-dice', (turns: number[]) => {
-            const complete: boolean[] = Array(diceCount).fill(false);
-            for (let i = 0; i < diceCount; i++) {
+            const complete: boolean[] = Array(this.game.enabledDice).fill(false);
+            for (let i = 0; i < this.game.enabledDice; i++) {
                 this.ui.startAnimation(i, turns[i], 0, () => {
                     console.log(`Animation dice #${i + 1} completed`);
                     complete[i] = true;
@@ -160,8 +159,9 @@ export class Client {
             }
         });
 
-        this.socket.on('current-player', (current: Player) => {
+        this.socket.on('current-player', (current: Player, enabledDice: number) => {
             this.game.currentPlayer = this.game.players.find(p => p.id == current.id);
+            this.game.enabledDice = enabledDice;
             this.ui.updateCurrentPlayer();
         });
 

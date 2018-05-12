@@ -447,6 +447,12 @@ export class UIHelper {
 
     public updateCurrentPlayer(): void {
 
+        if (this.game.enabledDice == 2) {
+            $('#dice-2').show();
+        } else {
+            $('#dice-2').hide();
+        }
+
         if (this.game.currentPlayer.id == this.client.player.id) {
             $('#btn-launch-dice').removeAttr('disabled');
         }

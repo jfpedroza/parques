@@ -55,6 +55,7 @@ export class ClientGame extends Game {
         this.currentPlayer = this.players.find(p => p.id == game.currentPlayer.id);
         this.rotation = this.player.color.rotation;
         this.dice = game.dice;
+        this.enabledDice = game.enabledDice;
     }
 
     public setSize(width: number, height: number): void {

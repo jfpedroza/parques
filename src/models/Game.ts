@@ -22,6 +22,8 @@ export abstract class Game {
 
     dice: number[];
 
+    enabledDice: number;
+
     piecesToMove: Map<number, number[]>;
 
     public toGame(): Game {
@@ -33,7 +35,8 @@ export abstract class Game {
             creator: this.creator,
             players: this.players,
             currentPlayer: this.currentPlayer,
-            dice: this.dice
+            dice: this.dice,
+            enabledDice: this.enabledDice
         };
     }
 
