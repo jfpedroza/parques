@@ -22,6 +22,8 @@ export abstract class Game {
 
     dice: number[];
 
+    enabledDice: number;
+
     piecesToMove: Map<number, number[]>;
 
     public toGame(): Game {
@@ -33,7 +35,8 @@ export abstract class Game {
             creator: this.creator,
             players: this.players,
             currentPlayer: this.currentPlayer,
-            dice: this.dice
+            dice: this.dice,
+            enabledDice: this.enabledDice
         };
     }
 
@@ -49,6 +52,10 @@ export abstract class Game {
 
     public allInJail(player: Player): boolean {
         return player.pieces.every(p => p.position == PiecePositions.JAIL);
+    }
+
+    public log(message: any, ... rest: any[]): void {
+        console.log(`Game[${this.id}][${this.name}]: ${message}`, ... rest);
     }
 }
 

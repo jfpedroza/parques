@@ -55,6 +55,7 @@ export class ClientGame extends Game {
         this.currentPlayer = this.players.find(p => p.id == game.currentPlayer.id);
         this.rotation = this.player.color.rotation;
         this.dice = game.dice;
+        this.enabledDice = game.enabledDice;
     }
 
     public setSize(width: number, height: number): void {
@@ -118,22 +119,22 @@ export class ClientGame extends Game {
     }
 
     public validatePathPoints(): Map<number, Point> {
-        console.log(`Validating path points...`);
+        this.log(`validating path points...`);
         const invalidPathPoints = new Map<number, Point>();
         this.pathPoints.forEach((point, pos) => {
             if (point.x < 0 || point.x >= this.width) {
-                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
+                this.log(`invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
                 invalidPathPoints.set(pos, point);
             } else if (point.y < 0 || point.y >= this.height) {
-                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
+                this.log(`invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
                 invalidPathPoints.set(pos, point);
             } else if (isNaN(point.dir)) {
-                console.log(`Invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
+                this.log(`invalid path point: pos=${pos} point=(${point.x}, ${point.y}, ${point.dir})`);
                 invalidPathPoints.set(pos, point);
             }
         });
 
-        console.log(`Validation finished.`);
+        this.log(`validation finished.`);
         return invalidPathPoints;
     }
 
@@ -208,19 +209,19 @@ export class ClientGame extends Game {
     }
 
     public validatePiecePositions(): Map<Player, Piece[]> {
-        console.log(`Validating piece positions...`);
+        this.log(`validating piece positions...`);
         const invalidPiecePositions = new Map<Player, Piece[]>();
         this.players.forEach(player => {
             player.pieces.forEach(piece => {
                 if (piece.p.x < 0 || piece.p.x >= this.width) {
-                    console.log(`Invalid piece position: player=${player.name} piece=${piece.id} pos=${piece.position} point=(${piece.p.x}, ${piece.p.y})`);
+                    this.log(`invalid piece position: player=${player.name} piece=${piece.id} pos=${piece.position} point=(${piece.p.x}, ${piece.p.y})`);
                     if (!invalidPiecePositions.has(player)) {
                         invalidPiecePositions.set(player, []);
                     }
 
                     invalidPiecePositions.get(player).push(piece);
                 } else if (piece.p.y < 0 || piece.p.y >= this.height) {
-                    console.log(`Invalid piece position: player=${player.name} piece=${piece.id} pos=${piece.position} point=(${piece.p.x}, ${piece.p.y})`);
+                    this.log(`invalid piece position: player=${player.name} piece=${piece.id} pos=${piece.position} point=(${piece.p.x}, ${piece.p.y})`);
                     if (!invalidPiecePositions.has(player)) {
                         invalidPiecePositions.set(player, []);
                     }
@@ -230,7 +231,7 @@ export class ClientGame extends Game {
             });
         });
 
-        console.log(`Validation finished.`);
+        this.log(`validation finished.`);
         return invalidPiecePositions;
     }
 
