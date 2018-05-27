@@ -130,3 +130,10 @@ typings/
 dist/
 /.idea/deployment.xml
 /.idea/watcherTasks.xml
+
+# VSCode ignores
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
