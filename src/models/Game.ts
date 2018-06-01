@@ -50,8 +50,8 @@ export abstract class Game {
 
     public abstract movePiece(player: Player, p: Piece, mov: number): void;
 
-    public allInJail(player: Player): boolean {
-        return player.pieces.every(p => p.position == PiecePositions.JAIL);
+    public everyDice(dice: number): boolean {
+        return this.dice.every(d => d == dice);
     }
 
     public log(message: any, ... rest: any[]): void {

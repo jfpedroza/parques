@@ -51,7 +51,7 @@ export class ClientGame extends Game {
 
     public start(game: Game): void {
         this.status = game.status;
-        this.players = game.players;
+        this.players = game.players.map(player => new Player(player));
         this.currentPlayer = this.players.find(p => p.id == game.currentPlayer.id);
         this.rotation = this.player.color.rotation;
         this.dice = game.dice;
@@ -143,7 +143,7 @@ export class ClientGame extends Game {
         for (const player of this.players) {
 
             {
-                const jailPieces = player.pieces.filter(p => p.position == PiecePositions.JAIL);
+                const jailPieces = player.piecesInJail();
                 const x = this.width - this.jailSize / 2 - (jailPieces.length - 1) * this.pieceRadius;
                 const y = this.height - this.jailSize / 2;
 
@@ -154,7 +154,7 @@ export class ClientGame extends Game {
             }
 
             {
-                const endPieces = player.pieces.filter(p => p.position == PiecePositions.END);
+                const endPieces = player.piecesAtTheEnd();
                 const x = this.width / 2 - (endPieces.length - 1) * this.pieceRadius;
                 const y = this.height / 2 + this.centerRadius * 0.8;
 
@@ -165,7 +165,7 @@ export class ClientGame extends Game {
             }
 
             {
-                const pieces = player.pieces.filter(p => p.position > PiecePositions.LAP && p.position < PiecePositions.END);
+                const pieces = player.piecesAfterLap();
                 pieces.forEach(piece => {
                     piece.p = Point.copy(this.pathPoints.get(piece.position));
                     piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
@@ -187,7 +187,7 @@ export class ClientGame extends Game {
                     otherPos += PiecePositions.LAP;
                 }
 
-                const same = player.pieces.filter(piece => piece.position == otherPos);
+                const same = player.piecesInPosition(otherPos);
                 if (same.length > 0) {
                     samePositions.set(player, same);
                 }

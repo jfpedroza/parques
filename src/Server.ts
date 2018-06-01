@@ -58,7 +58,10 @@ export class Server {
                 console.log(`Trying to log in with name=${name}`);
                 player = this.players.find((p) => p.name == name);
                 if (!player) {
-                    player = new Player(new Date().getTime(), name);
+                    player = new Player({
+                        id: new Date().getTime(),
+                        name: name
+                    } as Player);
                     this.players.push(player);
                     this.emitAdmins('add-player', player);
                 } else if (player.status == PlayerStatus.CONNECTED) {
