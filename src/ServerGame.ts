@@ -25,6 +25,8 @@ export class ServerGame extends Game {
 
     private allPiecesInJail: boolean;
 
+    private movableJailPieces: number;
+
     constructor(server: Server, creator: Player) {
         super();
         this.server = server;
@@ -78,6 +80,7 @@ export class ServerGame extends Game {
 
         this.dice = Array(diceCount).fill(1);
         this.enabledDice = diceCount;
+        this.movableJailPieces = 0;
 
         this.tries = new Map();
         this.players.forEach(player => this.tries.set(player, 0));
@@ -104,39 +107,49 @@ export class ServerGame extends Game {
         this.log(`${this.currentPlayer.name} got [${dice.join(', ')}] = ${this.diceRemaining}`);
 
         const same = this.enabledDice == 1 ? false : this.dice.every(dice => dice == this.dice[0]);
+        if (same) {
+            this.movableJailPieces = this.everyDice(1) || this.everyDice(6) ? pieceCount : 2;
+        } else {
+            this.movableJailPieces = 0;
+        }
+
         this.repeat = false;
         this.piecesToMove = new Map();
-        if (this.allInJail(this.currentPlayer)) {
-            this.allPiecesInJail = true;
+        const piecesInJail = this.currentPlayer.piecesInJail();
+        this.allPiecesInJail = this.currentPlayer.allInJail(false);
 
-            if (same) {
-                this.currentPlayer.pieces.forEach(p => this.piecesToMove.set(p.id, [PiecePositions.START]));
-            } else {
-                const tries = this.tries.get(this.currentPlayer) + 1;
-                this.tries.set(this.currentPlayer, tries);
-                if (tries == maxTries) {
-                    this.tries.set(this.currentPlayer, 0);
-                    this.currentPlayer = this.getNextPlayer();
-                }
-            }
-        } else {
-            this.allPiecesInJail = false;
-            if (same) {
-                this.repeat = true;
-            }
+        if (same) {
+            this.repeat = true;
+            piecesInJail.forEach(p => this.piecesToMove.set(p.id, [PiecePositions.START - PiecePositions.JAIL]));
+        }
 
-            const movables = this.currentPlayer.pieces.filter(p => p.position != PiecePositions.JAIL && p.position != PiecePositions.END);
+        if (this.allPiecesInJail && !same) {
+            const tries = this.tries.get(this.currentPlayer) + 1;
+            this.tries.set(this.currentPlayer, tries);
+            if (tries == maxTries) {
+                this.tries.set(this.currentPlayer, 0);
+                this.currentPlayer = this.getNextPlayer();
+            }
+        }
+
+        if ((same && piecesInJail.length <= 1) || (!same && !this.allPiecesInJail)) {
+
+            const movables = this.currentPlayer.activePieces();
 
             // TODO Make it work for more than 2 dice
             let array: number[];
-            if (this.enabledDice > 1) {
-                if (movables.length > 1) {
-                    array = [this.dice[0], this.dice[1], this.dice[0] + this.dice[1]];
-                } else {
-                    array = [this.dice[0] + this.dice[1]];
-                }
-            } else {
+            if (piecesInJail.length == 1 && same) {
                 array = [this.dice[0]];
+            } else {
+                if (this.enabledDice > 1) {
+                    if (movables.length > 1) {
+                        array = [this.dice[0], this.dice[1], this.dice[0] + this.dice[1]];
+                    } else {
+                        array = [this.dice[0] + this.dice[1]];
+                    }
+                } else {
+                    array = [this.dice[0]];
+                }
             }
 
             movables.forEach(piece => {
@@ -161,9 +174,9 @@ export class ServerGame extends Game {
         } else {
             this.enabledDice = diceCount;
             const pieces = this.currentPlayer.pieces;
-            const piecesAtEnd = pieces.filter(piece => piece.position == PiecePositions.END);
+            const piecesAtTheEnd = this.currentPlayer.piecesAtTheEnd();
             const piecesOneDice = pieces.filter(piece => PiecePositions.END - piece.position <= 6);
-            if (piecesAtEnd.length == pieceCount - 1 && piecesOneDice.length == pieceCount) {
+            if (piecesAtTheEnd.length == pieceCount - 1 && piecesOneDice.length == pieceCount) {
                 this.enabledDice = 1;
             }
 
@@ -178,27 +191,34 @@ export class ServerGame extends Game {
     public movePiece(player: Player, p: Piece, mov: number): void {
         const piece = player.pieces.find(piece => piece.id == p.id);
         let pieces: Piece[];
-        if (this.allPiecesInJail) {
-            pieces = [piece];
+        if (piece.position == PiecePositions.JAIL) {
+            this.movableJailPieces--;
+            if (this.movableJailPieces > 0) {
+                pieces = [piece];
+            } else {
+                pieces = player.piecesInJail();
+            }
         } else {
-            pieces = player.pieces.filter(piece => piece.position != PiecePositions.END);
+            pieces = player.activePieces();
         }
 
         pieces.forEach(piece => {
-            let movs = this.piecesToMove.get(piece.id);
-            const copy = movs.slice();
-            for (let i = 0; i < movs.length; i++) {
-                movs[i] -= mov;
-            }
+            if (this.piecesToMove.has(piece.id)) {
+                let movs = this.piecesToMove.get(piece.id);
+                const copy = movs.slice();
+                for (let i = 0; i < movs.length; i++) {
+                    movs[i] -= mov;
+                }
 
-            copy.splice(copy.indexOf(mov), 1);
-            const min = Math.min(...copy);
+                copy.splice(copy.indexOf(mov), 1);
+                const min = Math.min(...copy);
 
-            movs = movs.filter(m => m >= min);
-            if (movs.length > 0) {
-                this.piecesToMove.set(piece.id, movs);
-            } else {
-                this.piecesToMove.delete(piece.id);
+                movs = movs.filter(m => m >= min);
+                if (movs.length > 0) {
+                    this.piecesToMove.set(piece.id, movs);
+                } else {
+                    this.piecesToMove.delete(piece.id);
+                }
             }
         });
 
@@ -212,7 +232,7 @@ export class ServerGame extends Game {
             this.repeat = true;
         }
 
-        if (player.pieces.every(p => p.position == PiecePositions.END)) {
+        if (player.allAtTheEnd()) {
             this.winner = player;
             this.status = GameStatus.FINISHED;
             this.log(`has finished! Winner: ${this.winner.name}`);
