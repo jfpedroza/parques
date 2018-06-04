@@ -7,7 +7,7 @@ import {Constants, Game, GameStatus} from "../../models/Game";
 import {ClientGame} from "./ClientGame";
 import {Color} from "../../models/Color";
 import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
-import {Piece} from "../../models/Piece";
+import {Piece, PieceMovement} from "../../models/Piece";
 
 export class Client {
     private socket: Socket;
@@ -178,11 +178,11 @@ export class Client {
             this.ui.updatePiecesToMove();
         });
 
-        this.socket.on('move-piece', (player: Player, piece: Piece, mov: number) => {
-            player = this.game.players.find(p => p.id == player.id);
-            piece = player.pieces.find(p => p.id == piece.id);
-            this.game.log(`move piece ${piece.id} of ${player.name} ${mov} place(s)`);
-            this.game.movePiece(player, piece, mov);
+        this.socket.on('move-piece', (movement: PieceMovement) => {
+            movement.player = this.game.players.find(p => p.id == movement.player.id);
+            movement.piece = movement.player.pieces.find(p => p.id == movement.piece.id);
+            this.game.log(`move piece ${movement.piece.id} of ${movement.player.name} ${movement.mov} place(s)`);
+            this.game.movePiece(movement);
             const invalidPiecePositions = this.game.validatePiecePositions();
             if (invalidPiecePositions.size > 0) {
                 UIHelper.showNotification({
@@ -192,7 +192,7 @@ export class Client {
                 });
             }
 
-            this.ui.moviePiece(player, piece);
+            this.ui.movePiece(movement);
         });
 
         this.socket.on('winner', (winner: Player) => {

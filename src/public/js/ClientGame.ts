@@ -1,9 +1,9 @@
 
-import {Game, GameStatus} from "../../models/Game";
+import {Game, GameStatus, Constants} from "../../models/Game";
 import {Player} from "../../models/Player";
 import {Point} from "../../models/Point";
 import {Colors} from "../../models/Color";
-import {Piece, PiecePositions} from "../../models/Piece";
+import {Piece, PiecePositions, PieceMovement} from "../../models/Piece";
 
 export class ClientGame extends Game {
 
@@ -22,6 +22,8 @@ export class ClientGame extends Game {
     public jailSize: number;
 
     public pieceRadius: number;
+
+    public smallPieceRadius: number;
 
     public centerRadius: number;
 
@@ -66,6 +68,7 @@ export class ClientGame extends Game {
         this.scale = width / realSize;
         this.jailSize = 366 * this.scale;
         this.pieceRadius = 24 * this.scale;
+        this.smallPieceRadius = 19.5 * this.scale;
         this.centerRadius = 162 * this.scale;
         this.center = new Point(this.width / 2, this.height / 2);
     }
@@ -76,8 +79,8 @@ export class ClientGame extends Game {
         const xstart = this.width - this.pieceRadius;
         const ystart = this.height - this.pieceRadius;
 
-        const start = new Point(this.center.x + dstart, ystart - this.pieceRadius * 4 * 2);
-        const end = new Point(xstart - this.pieceRadius * 4 * 2, this.center.y + dstart);
+        const start = new Point(this.center.x + dstart, ystart - (this.pieceRadius * 2 + 1) * 4);
+        const end = new Point(xstart - (this.pieceRadius * 2 + 1) * 4, this.center.y + dstart);
         const center = new Point(end.x, start.y);
 
         const points: Point[] = [];
@@ -86,7 +89,7 @@ export class ClientGame extends Game {
 
         for (let j = 0; j < 4; j++) {
             for (let i = 0; i < 5; i++) {
-                const point = new Point(this.center.x + dstart, ystart - this.pieceRadius * i * 2);
+                const point = new Point(this.center.x + dstart, ystart - (this.pieceRadius * 2 + 1) * i);
                 point.rotate(this.center, - j * Math.PI / 2);
                 points.push(point);
             }
@@ -99,7 +102,7 @@ export class ClientGame extends Game {
             }
 
             for (let i = 0; i < 5; i++) {
-                const point = new Point(xstart - this.pieceRadius * 4 * 2 + this.pieceRadius * i * 2, this.center.y + dstart, -Math.PI / 2);
+                const point = new Point(xstart - (this.pieceRadius * 2 + 1) * 4 + (this.pieceRadius * 2 + 1) * i, this.center.y + dstart, -Math.PI / 2);
                 point.rotate(this.center, - j * Math.PI / 2);
                 points.push(point);
             }
@@ -110,10 +113,12 @@ export class ClientGame extends Game {
         }
 
         for (let i = 1; i < 8; i++) {
-            points.push(new Point(this.center.x, ystart - this.pieceRadius * i * 2));
+            points.push(new Point(this.center.x, ystart - (this.pieceRadius * 2 + 1) * i));
         }
 
-        points.push(Point.copy(this.center));
+        const lastPoint = Point.copy(this.center);
+        lastPoint.y += this.centerRadius * 0.8;
+        points.push(lastPoint);
 
         points.forEach((p, i) => this.pathPoints.set(i, p));
     }
@@ -142,35 +147,24 @@ export class ClientGame extends Game {
 
         for (const player of this.players) {
 
-            {
-                const jailPieces = player.piecesInJail();
-                const x = this.width - this.jailSize / 2 - (jailPieces.length - 1) * this.pieceRadius;
-                const y = this.height - this.jailSize / 2;
-
-                jailPieces.forEach((piece, i) => {
-                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
-                    piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
-                });
+            const positions = [PiecePositions.JAIL];
+            for (let i = PiecePositions.LAP + 1; i <= PiecePositions.END; i++) {
+                positions.push(i);
             }
 
-            {
-                const endPieces = player.piecesAtTheEnd();
-                const x = this.width / 2 - (endPieces.length - 1) * this.pieceRadius;
-                const y = this.height / 2 + this.centerRadius * 0.8;
+            positions.forEach(position => {
+                const pieces = player.piecesInPosition(position);
+                const radius = pieces.length == Constants.pieceCount ? this.smallPieceRadius : this.pieceRadius;
+                const point = this.pathPoints.get(position);
+                const x = point.x - (pieces.length - 1) * radius;
+                const y = point.y;
 
-                endPieces.forEach((piece, i) => {
-                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
+                pieces.forEach((piece, i) => {
+                    piece.radius = radius;
+                    piece.p = new Point(x + i * (radius * 2 + 1), y);
                     piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
                 });
-            }
-
-            {
-                const pieces = player.piecesAfterLap();
-                pieces.forEach(piece => {
-                    piece.p = Point.copy(this.pathPoints.get(piece.position));
-                    piece.p.rotate(this.center, (this.rotation - player.color.rotation) * Math.PI / 180);
-                });
-            }
+            });
         }
 
         for (let pos = PiecePositions.JAIL + 1; pos <= PiecePositions.LAP; pos++) {
@@ -193,14 +187,51 @@ export class ClientGame extends Game {
                 }
             });
 
+            const pieces: Array<Array<Piece>> = [];
+            const piecePlayers: Array<Player> = [];
+            const maxSize = Constants.pieceCount;
+            let left, j = 0;
+            do {
+                left = false;
+                for (const player of samePositions.keys()) {
+                    if (samePositions.get(player).length > 0) {
+                        const piece = samePositions.get(player).splice(0, 1)[0];
+                        if (samePositions.get(player).length > 0) {
+                            left = true;
+                        }
+
+                        let added = false;
+                        do {
+                            if (pieces.length <= j) {
+                                pieces.push([piece]);
+                                piecePlayers.push(player);
+                                added = true;
+                            } else {
+                                if (piecePlayers[j] == player) {
+                                    pieces[j].push(piece);
+                                    added = true;
+                                }
+                            }
+
+                            j++;
+                            if (j == maxSize) {
+                                j = 0;
+                            }
+                        } while (!added);
+                    }
+                }
+            } while (left);
+
+            const radius = pieces.length == Constants.pieceCount ? this.smallPieceRadius : this.pieceRadius;
             const point = this.pathPoints.get(pos);
-            const x = point.x - (samePositions.size - 1) * this.pieceRadius;
+            const x = point.x - (pieces.length - 1) * radius;
             const y = point.y;
 
             let i = 0;
-            samePositions.forEach((pieces) => {
-                pieces.forEach((piece) => {
-                    piece.p = new Point(x + i * (this.pieceRadius * 2 + 2), y);
+            pieces.forEach((pieces2) => {
+                pieces2.forEach((piece) => {
+                    piece.radius = radius;
+                    piece.p = new Point(x + i * (radius * 2 + 1), y);
                     piece.p.rotate(point, point.dir);
                 });
                 i++;
@@ -235,8 +266,8 @@ export class ClientGame extends Game {
         return invalidPiecePositions;
     }
 
-    public movePiece(player: Player, piece: Piece, mov: number): void {
-        piece.position = this.calculateNextPosition(piece, mov);
+    public movePiece(movement: PieceMovement): void {
+        movement.piece.position = this.calculateNextPosition(movement.piece, movement.mov);
         this.calculatePiecePositions();
     }
 }

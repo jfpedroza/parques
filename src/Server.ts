@@ -200,7 +200,7 @@ export class Server {
 
         socket.on("move-piece", (gameId: number, piece: Piece, mov: number) => {
             const game = this.getGame(gameId);
-            game.movePiece(player, piece, mov);
+            game.movePiece({player, piece, mov});
             this.emitAdmins('update-game', game.toGame());
         });
 
