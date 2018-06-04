@@ -73,27 +73,6 @@ export class ServerGame extends Game {
             }
         }
 
-        this.players[0].pieces.forEach((piece, i) => {
-            if (i > 0) {
-                piece.position = PiecePositions.START + i - 1;
-            }
-        });
-
-        this.players[1].pieces[0].position = 56;
-        this.players[1].pieces[1].position = 55;
-        this.players[1].pieces[2].position = 54;
-        this.players[1].pieces[3].position = 53;
-
-        this.players[2].pieces[0].position = 42;
-        this.players[2].pieces[1].position = 42;
-        this.players[2].pieces[2].position = 43;
-        this.players[2].pieces[3].position = 46;
-
-        this.players[3].pieces[0].position = 29;
-        this.players[3].pieces[1].position = 30;
-        this.players[3].pieces[2].position = 31;
-        this.players[3].pieces[3].position = 32;
-
         this.dice = Array(diceCount).fill(1);
         this.enabledDice = diceCount;
         this.movableJailPieces = 0;
