@@ -4,7 +4,7 @@ import Timer = NodeJS.Timer;
 import {ClientGame} from "./ClientGame";
 import {NotificationTypes, NotifPositions, ToastrNotification} from "../../models/Notification";
 import {Constants} from "../../models/Game";
-import {Piece, PiecePositions} from "../../models/Piece";
+import {Piece, PiecePositions, PieceMovement} from "../../models/Piece";
 import {Colors} from "../../models/Color";
 import {Point} from "../../models/Point";
 import {Player} from "../../models/Player";
@@ -607,33 +607,33 @@ export class UIHelper {
         });
     }
 
-    public movePiece(player: Player, piece: Piece): void {
+    public movePiece(movement: PieceMovement): void {
 
-        for (const ply of this.game.players) {
-            for (const pc of ply.pieces) {
-                const layer = this.board.getLayer(`p-${ply.id}-${pc.id}`);
+        for (const player of this.game.players) {
+            for (const piece of player.pieces) {
+                const layer = this.board.getLayer(`p-${player.id}-${piece.id}`);
                 let animate = false;
 
-                if (Math.abs(layer.x - pc.p.x) >= 1) {
+                if (Math.abs(layer.x - piece.p.x) >= 1) {
                     animate = true;
                 }
 
-                if (Math.abs(layer.y - pc.p.y) >= 1) {
+                if (Math.abs(layer.y - piece.p.y) >= 1) {
                     animate = true;
                 }
 
-                if (Math.abs(layer.width - pc.radius * 2) >= 1) {
+                if (Math.abs(layer.width - piece.radius * 2) >= 1) {
                     animate = true;
                 }
 
                 if (animate) {
-                    this.board.animateLayerGroup(`p-${ply.id}-${pc.id}`, {
+                    this.board.animateLayerGroup(`p-${player.id}-${piece.id}`, {
                         x: (layer: JCanvasLayerDef) => layer.data.piece.p.x,
                         y: (layer: JCanvasLayerDef) => layer.data.piece.p.y,
                         width: (layer: JCanvasLayerDef) => layer.data.piece.radius * 2,
                         height: (layer: JCanvasLayerDef) => layer.data.piece.radius * 2
                     }, 500, layer => {
-                        if (layer.name == `p-${player.id}-${piece.id}`) {
+                        if (layer.name == `p-${movement.player.id}-${movement.piece.id}`) {
                             this.client.moveAnimationComplete();
                         }
                     });

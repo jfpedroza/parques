@@ -3,7 +3,7 @@ import {Constants, Game, GameStatus} from "./models/Game";
 import {Player} from "./models/Player";
 import {Colors} from "./models/Color";
 import {Server} from "./Server";
-import {Piece, PiecePositions} from "./models/Piece";
+import {Piece, PiecePositions, PieceMovement} from "./models/Piece";
 
 import minLaps = Constants.minLaps;
 import maxLaps = Constants.maxLaps;
@@ -19,13 +19,13 @@ export class ServerGame extends Game {
 
     private tries: Map<Player, number>;
 
-    private diceRemaining: number;
-
     private repeat: boolean;
 
     private allPiecesInJail: boolean;
 
     private movableJailPieces: number;
+
+    private remainingPiecesToMove: Map<Player, PieceMovement[]>;
 
     constructor(server: Server, creator: Player) {
         super();
@@ -73,20 +73,41 @@ export class ServerGame extends Game {
             }
         }
 
+        this.players[0].pieces.forEach((piece, i) => {
+            if (i > 0) {
+                piece.position = PiecePositions.START + i - 1;
+            }
+        });
+
+        this.players[1].pieces[0].position = 56;
+        this.players[1].pieces[1].position = 55;
+        this.players[1].pieces[2].position = 54;
+        this.players[1].pieces[3].position = 53;
+
+        this.players[2].pieces[0].position = 42;
+        this.players[2].pieces[1].position = 42;
+        this.players[2].pieces[2].position = 43;
+        this.players[2].pieces[3].position = 46;
+
+        this.players[3].pieces[0].position = 29;
+        this.players[3].pieces[1].position = 30;
+        this.players[3].pieces[2].position = 31;
+        this.players[3].pieces[3].position = 32;
+
         this.dice = Array(diceCount).fill(1);
         this.enabledDice = diceCount;
         this.movableJailPieces = 0;
 
         this.tries = new Map();
+        this.remainingPiecesToMove = new Map();
         this.players.forEach(player => this.tries.set(player, 0));
     }
 
     public launchDice(): void {
-        const dice = this.dice.slice(0, this.enabledDice);
 
         const laps = Math.floor(minLaps + (maxLaps - minLaps) * Math.random());
 
-        const turns = dice.map(() => {
+        const turns = this.dice.slice(0, this.enabledDice).map(() => {
             const lapPart = Math.floor(maxImages * Math.random());
             return laps * maxImages + lapPart;
         });
@@ -97,9 +118,10 @@ export class ServerGame extends Game {
             this.dice[i] = 1 + (this.dice[i] - 1 + turns[i]) % maxImages;
         }
 
-        this.diceRemaining = dice.reduce((a, b) => a + b);
+        const dice = this.dice.slice(0, this.enabledDice);
+        const diceRemaining = dice.reduce((a, b) => a + b);
 
-        this.log(`${this.currentPlayer.name} got [${dice.join(', ')}] = ${this.diceRemaining}`);
+        this.log(`${this.currentPlayer.name} got [${dice.join(', ')}] = ${diceRemaining}`);
 
         const same = this.enabledDice == 1 ? false : this.dice.every(dice => dice == this.dice[0]);
         if (same) {
@@ -183,8 +205,11 @@ export class ServerGame extends Game {
         this.animationComplete(player);
     }
 
-    public movePiece(player: Player, p: Piece, mov: number): void {
-        const piece = player.pieces.find(piece => piece.id == p.id);
+    public movePiece(movement: PieceMovement): void {
+        const player = movement.player;
+        const piece = player.pieces.find(piece => piece.id == movement.piece.id);
+        movement.piece = piece;
+        const mov = movement.mov;
         let pieces: Piece[];
         if (piece.position == PiecePositions.JAIL) {
             this.movableJailPieces--;
@@ -217,13 +242,57 @@ export class ServerGame extends Game {
             }
         });
 
+        this.remainingPiecesToMove.clear();
         piece.position = this.calculateNextPosition(piece, mov);
         if (piece.position == PiecePositions.END) {
             this.piecesToMove.delete(piece.id);
             this.repeat = true;
+        } else {
+            const piecesToJail: Map<Player, Piece[]> = new Map();
+            if (piece.position == PiecePositions.START || !PiecePositions.SAFES_JAIL.includes(piece.position)) {
+                for (const ply of this.players) {
+                    if (ply.id != player.id) {
+                        let rotation = ply.color.rotation - player.color.rotation;
+                        if (rotation < 0) {
+                            rotation += 360;
+                        }
+
+                        const steps = rotation / 90;
+                        let otherPos = piece.position - steps * 17;
+                        if (otherPos <= PiecePositions.JAIL) {
+                            otherPos += PiecePositions.LAP;
+                        }
+
+                        const same = ply.piecesInPosition(otherPos);
+                        if (same.length > 0) {
+                            piecesToJail.set(ply, same);
+                        }
+                    }
+                }
+            }
+
+            if (piecesToJail.size > 0) {
+                this.repeat = true;
+                this.players.forEach(player => {
+                    this.remainingPiecesToMove.set(player, []);
+                    piecesToJail.forEach((pieces, ply) => {
+                        pieces.forEach(piece => {
+                            this.remainingPiecesToMove.get(player).push({
+                                player: ply,
+                                piece: piece,
+                                mov: PiecePositions.JAIL - piece.position
+                            });
+                        });
+                    });
+                });
+
+                piecesToJail.forEach(pieces => {
+                    pieces.forEach(piece => piece.position = PiecePositions.JAIL);
+                });
+            }
         }
 
-        if (PiecePositions.SAFES.some(safe => safe == piece.position)) {
+        if (PiecePositions.SAFES.includes(piece.position)) {
             this.repeat = true;
         }
 
@@ -235,11 +304,20 @@ export class ServerGame extends Game {
             this.currentPlayer = this.getNextPlayer();
         }
 
-        this.emitAll("move-piece", player, piece, mov);
+        this.emitAll("move-piece", movement);
     }
 
     public moveAnimationComplete(player: Player): void {
-        this.animationComplete(player);
+        if (this.remainingPiecesToMove.has(player)) {
+            const movement = this.remainingPiecesToMove.get(player).splice(0, 1)[0];
+            if (this.remainingPiecesToMove.get(player).length == 0) {
+                this.remainingPiecesToMove.delete(player);
+            }
+
+            this.emit(player, "move-piece", movement);
+        } else {
+            this.animationComplete(player);
+        }
     }
 
     private getNextPlayer(): Player {

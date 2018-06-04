@@ -1,5 +1,6 @@
 
 import {Point} from "./Point";
+import { Player } from "./Player";
 
 export class Piece {
 
@@ -19,6 +20,15 @@ export class Piece {
     }
 }
 
+export interface PieceMovement {
+
+    player: Player;
+
+    piece: Piece;
+
+    mov: number;
+}
+
 export namespace PiecePositions {
 
     export const JAIL = 0;
@@ -26,4 +36,5 @@ export namespace PiecePositions {
     export const LAP = 68;
     export const END = 76;
     export const SAFES = [12, 17, 29, 34, 46, 51, 63, 68];
+    export const SAFES_JAIL = [12, 17, 22, 29, 34, 39, 46, 51, 56, 63, 68];
 }

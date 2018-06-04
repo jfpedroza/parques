@@ -1,6 +1,6 @@
 
 import {Player} from "./Player";
-import {Piece, PiecePositions} from "./Piece";
+import {Piece, PiecePositions, PieceMovement} from "./Piece";
 
 export abstract class Game {
 
@@ -48,7 +48,7 @@ export abstract class Game {
         }
     }
 
-    public abstract movePiece(player: Player, p: Piece, mov: number): void;
+    public abstract movePiece(movement: PieceMovement): void;
 
     public everyDice(dice: number): boolean {
         return this.dice.every(d => d == dice);

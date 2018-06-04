@@ -3,7 +3,7 @@ import {Game, GameStatus, Constants} from "../../models/Game";
 import {Player} from "../../models/Player";
 import {Point} from "../../models/Point";
 import {Colors} from "../../models/Color";
-import {Piece, PiecePositions} from "../../models/Piece";
+import {Piece, PiecePositions, PieceMovement} from "../../models/Piece";
 
 export class ClientGame extends Game {
 
@@ -266,8 +266,8 @@ export class ClientGame extends Game {
         return invalidPiecePositions;
     }
 
-    public movePiece(player: Player, piece: Piece, mov: number): void {
-        piece.position = this.calculateNextPosition(piece, mov);
+    public movePiece(movement: PieceMovement): void {
+        movement.piece.position = this.calculateNextPosition(movement.piece, movement.mov);
         this.calculatePiecePositions();
     }
 }
