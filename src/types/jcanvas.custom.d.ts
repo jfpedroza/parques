@@ -169,6 +169,20 @@ interface JQuery {
 
     addLayer(def: JCanvasLayerDef): JQuery;
 
+    getLayer(index: number): JCanvasLayerDef;
+
+    getLayer(name: string): JCanvasLayerDef;
+
+    getLayer(name: RegExp): JCanvasLayerDef;
+
+    getLayers(pred?: (layer: JCanvasLayerDef) => boolean): JCanvasLayerDef[];
+
+    getLayerGroup(name: string): JCanvasLayerDef;
+
+    getLayerGroup(name: RegExp): JCanvasLayerDef;
+
+    getLayerIndex(name: string): number;
+
     drawLayers(): void;
 
     rotateCanvas(def: JCanvasRotateDef): JQuery;

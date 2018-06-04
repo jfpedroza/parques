@@ -496,8 +496,8 @@ export class UIHelper {
                     type: 'ellipse',
                     x: piece.p.x,
                     y: piece.p.y,
-                    width: pieceRadius * 2,
-                    height: pieceRadius * 2,
+                    width: piece.radius * 2,
+                    height: piece.radius * 2,
                     fillStyle: player.color.value,
                     strokeWidth: 2,
                     strokeStyle: secondColor,
@@ -607,16 +607,39 @@ export class UIHelper {
         });
     }
 
-    public moviePiece(player: Player, piece: Piece): void {
+    public movePiece(player: Player, piece: Piece): void {
 
-        this.board.animateLayerGroup(`pieces`, {
-            x: (layer: JCanvasLayerDef) => layer.data.piece.p.x,
-            y: (layer: JCanvasLayerDef) => layer.data.piece.p.y
-        }, 500, layer => {
-            if (layer.name == `p-${player.id}-${piece.id}`) {
-                this.client.moveAnimationComplete();
+        for (const ply of this.game.players) {
+            for (const pc of ply.pieces) {
+                const layer = this.board.getLayer(`p-${ply.id}-${pc.id}`);
+                let animate = false;
+
+                if (Math.abs(layer.x - pc.p.x) >= 1) {
+                    animate = true;
+                }
+
+                if (Math.abs(layer.y - pc.p.y) >= 1) {
+                    animate = true;
+                }
+
+                if (Math.abs(layer.width - pc.radius * 2) >= 1) {
+                    animate = true;
+                }
+
+                if (animate) {
+                    this.board.animateLayerGroup(`p-${ply.id}-${pc.id}`, {
+                        x: (layer: JCanvasLayerDef) => layer.data.piece.p.x,
+                        y: (layer: JCanvasLayerDef) => layer.data.piece.p.y,
+                        width: (layer: JCanvasLayerDef) => layer.data.piece.radius * 2,
+                        height: (layer: JCanvasLayerDef) => layer.data.piece.radius * 2
+                    }, 500, layer => {
+                        if (layer.name == `p-${player.id}-${piece.id}`) {
+                            this.client.moveAnimationComplete();
+                        }
+                    });
+                }
             }
-        });
+        }
     }
 
     private static setDiceImage(dice: number, num: number) {

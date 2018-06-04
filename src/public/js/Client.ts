@@ -192,7 +192,7 @@ export class Client {
                 });
             }
 
-            this.ui.moviePiece(player, piece);
+            this.ui.movePiece(player, piece);
         });
 
         this.socket.on('winner', (winner: Player) => {

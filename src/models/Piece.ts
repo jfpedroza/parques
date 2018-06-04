@@ -9,10 +9,13 @@ export class Piece {
 
     public p: Point;
 
+    public radius: number;
+
     public constructor(id: number) {
         this.id = id;
         this.position = PiecePositions.JAIL;
         this.p = new Point();
+        this.radius = 0;
     }
 }
 

@@ -73,11 +73,6 @@ export class ServerGame extends Game {
             }
         }
 
-        // this.players[0].pieces.forEach((p, i) => p.position = 8);
-        // this.players[1].pieces.forEach((p, i) => p.position = 59);
-        // this.players[2].pieces.forEach((p, i) => p.position = 42);
-        // this.players[3].pieces.forEach((p, i) => p.position = 25);
-
         this.dice = Array(diceCount).fill(1);
         this.enabledDice = diceCount;
         this.movableJailPieces = 0;
