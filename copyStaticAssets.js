@@ -3,8 +3,8 @@
  */
 const shell = require('shelljs');
 
-if (!shell.test('-e', '/dist/')) {
-    shell.mkdir('/dist/');
+if (!shell.test('-e', 'dist/')) {
+    shell.mkdir('dist/');
 }
 
 shell.cp('-R', 'src/public/img', 'dist/public/');
