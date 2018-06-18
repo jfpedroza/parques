@@ -153,7 +153,7 @@ export class Client {
                     this.game.log(`animation dice #${i + 1} completed`);
                     complete[i] = true;
                     if (complete.every(c => c)) {
-                        this.socket.emit('dice-animation-complete', this.game.id);
+                        this.diceAnimationComplete();
                     }
                 });
             }
@@ -267,6 +267,10 @@ export class Client {
 
     public movePiece(piece: Piece, mov: number): void {
         this.socket.emit('move-piece', this.game.id, piece, mov);
+    }
+
+    public diceAnimationComplete(): void {
+        this.socket.emit('dice-animation-complete', this.game.id);
     }
 
     public moveAnimationComplete(): void {
