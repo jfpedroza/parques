@@ -24,8 +24,6 @@ export abstract class Game {
 
     enabledDice: number;
 
-    piecesToMove: Map<number, number[]>;
-
     public toGame(): Game {
         return <Game>{
             id: this.id,

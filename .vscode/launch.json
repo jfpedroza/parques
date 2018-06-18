@@ -7,8 +7,17 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Run",
+            "program": "${workspaceFolder}/dist/index.js",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Build & Run",
-            "program": "${workspaceFolder}\\dist\\index.js",
+            "program": "${workspaceFolder}/dist/index.js",
             "preLaunchTask": "npm: build",
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"

@@ -177,9 +177,7 @@ export class UIHelper {
                 }
 
                 $('#room-name').text(this.game.name);
-                if (this.game.currentPlayer.id != this.client.player.id) {
-                    $('#btn-launch-dice').attr('disabled', 'disable');
-                }
+                $('#btn-launch-dice').attr('disabled', 'disable');
 
                 this.game.dice.forEach((dice, i) => {
                     UIHelper.setDiceImage(i, dice);
@@ -187,6 +185,8 @@ export class UIHelper {
 
                 this.renderStage5Players();
                 this.renderBoard();
+
+                this.client.diceAnimationComplete();
 
                 break;
 
@@ -588,7 +588,11 @@ export class UIHelper {
                     }
                 });
 
-                const text = piece.position + mov == PiecePositions.START ? 'S' : mov.toString();
+                let text = mov.toString();
+                if (piece.position == PiecePositions.JAIL) {
+                    text = piece.position + mov == PiecePositions.START ? 'S' : (mov - PiecePositions.START + PiecePositions.JAIL).toString();
+                }
+
                 this.board.addLayer({
                     type: 'text',
                     x: point.x,
@@ -608,7 +612,7 @@ export class UIHelper {
     }
 
     public movePiece(movement: PieceMovement): void {
-
+        let animated = false;
         for (const player of this.game.players) {
             for (const piece of player.pieces) {
                 const layer = this.board.getLayer(`p-${player.id}-${piece.id}`);
@@ -627,6 +631,7 @@ export class UIHelper {
                 }
 
                 if (animate) {
+                    animated = true;
                     this.board.animateLayerGroup(`p-${player.id}-${piece.id}`, {
                         x: (layer: JCanvasLayerDef) => layer.data.piece.p.x,
                         y: (layer: JCanvasLayerDef) => layer.data.piece.p.y,
@@ -639,6 +644,10 @@ export class UIHelper {
                     });
                 }
             }
+        }
+
+        if (!animated) {
+            this.client.moveAnimationComplete();
         }
     }
 

@@ -9,6 +9,8 @@ export class ClientGame extends Game {
 
     public player: Player;
 
+    piecesToMove: Map<number, number[]>;
+
     public rotation: number;
 
     public pathPoints: Map<number, Point>; // TODO Put back to private

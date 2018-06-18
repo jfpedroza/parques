@@ -25,6 +25,8 @@ export class ServerGame extends Game {
 
     private movableJailPieces: number;
 
+    piecesToMove: Map<number, number[]>[];
+
     private remainingPiecesToMove: Map<Player, PieceMovement[]>;
 
     constructor(server: Server, creator: Player) {
@@ -78,6 +80,7 @@ export class ServerGame extends Game {
         this.movableJailPieces = 0;
 
         this.tries = new Map();
+        this.piecesToMove = [];
         this.remainingPiecesToMove = new Map();
         this.players.forEach(player => this.tries.set(player, 0));
     }
@@ -110,13 +113,13 @@ export class ServerGame extends Game {
         }
 
         this.repeat = false;
-        this.piecesToMove = new Map();
+        this.piecesToMove.push(new Map());
         const piecesInJail = this.currentPlayer.piecesInJail();
         this.allPiecesInJail = this.currentPlayer.allInJail(false);
 
         if (same) {
             this.repeat = true;
-            piecesInJail.forEach(p => this.piecesToMove.set(p.id, [PiecePositions.START - PiecePositions.JAIL]));
+            piecesInJail.forEach(p => this.piecesToMove[0].set(p.id, [PiecePositions.START - PiecePositions.JAIL]));
         }
 
         if (this.allPiecesInJail && !same) {
@@ -135,30 +138,38 @@ export class ServerGame extends Game {
             // TODO Make it work for more than 2 dice
             let array: number[];
             if (piecesInJail.length == 1 && same) {
-                array = [this.dice[0]];
+                if (movables.length > 0) {
+                    array = [this.dice[0]];
+                } else {
+                    array = [];
+                    this.piecesToMove[0].set(piecesInJail[0].id, [PiecePositions.START - PiecePositions.JAIL]);
+                    const piecesToMove2 = new Map<number, number[]>();
+                    piecesToMove2.set(piecesInJail[0].id, [this.dice[0]]);
+                    this.piecesToMove.push(piecesToMove2);
+                }
             } else {
                 if (this.enabledDice > 1) {
-                    if (movables.length > 1) {
-                        array = [this.dice[0], this.dice[1], this.dice[0] + this.dice[1]];
-                    } else {
-                        array = [this.dice[0] + this.dice[1]];
-                    }
+                    array = [this.dice[0], this.dice[1], this.dice[0] + this.dice[1]];
                 } else {
                     array = [this.dice[0]];
                 }
             }
 
             movables.forEach(piece => {
-                this.piecesToMove.set(piece.id, array.slice());
+                this.piecesToMove[0].set(piece.id, array.slice());
             });
+        }
+
+        if (this.piecesToMove[0].size == 0) {
+            this.piecesToMove.splice(0, 1);
         }
     }
 
     private animationComplete(player: Player) {
-        if (this.piecesToMove.size > 0) {
+        if (this.piecesToMove.length > 0) {
             if (player.id == this.currentPlayer.id) {
                 const pieces: any = {};
-                this.piecesToMove.forEach((movs, pId) => {
+                this.piecesToMove[0].forEach((movs, pId) => {
                     pieces[pId] = movs;
                 });
 
@@ -189,6 +200,7 @@ export class ServerGame extends Game {
         const piece = player.pieces.find(piece => piece.id == movement.piece.id);
         movement.piece = piece;
         const mov = movement.mov;
+        this.log(`move piece ${piece.id} of ${player.name} ${mov} place(s)`);
         let pieces: Piece[];
         if (piece.position == PiecePositions.JAIL) {
             this.movableJailPieces--;
@@ -202,8 +214,8 @@ export class ServerGame extends Game {
         }
 
         pieces.forEach(piece => {
-            if (this.piecesToMove.has(piece.id)) {
-                let movs = this.piecesToMove.get(piece.id);
+            if (this.piecesToMove[0].has(piece.id)) {
+                let movs = this.piecesToMove[0].get(piece.id);
                 const copy = movs.slice();
                 for (let i = 0; i < movs.length; i++) {
                     movs[i] -= mov;
@@ -214,9 +226,9 @@ export class ServerGame extends Game {
 
                 movs = movs.filter(m => m >= min);
                 if (movs.length > 0) {
-                    this.piecesToMove.set(piece.id, movs);
+                    this.piecesToMove[0].set(piece.id, movs);
                 } else {
-                    this.piecesToMove.delete(piece.id);
+                    this.piecesToMove[0].delete(piece.id);
                 }
             }
         });
@@ -224,7 +236,7 @@ export class ServerGame extends Game {
         this.remainingPiecesToMove.clear();
         piece.position = this.calculateNextPosition(piece, mov);
         if (piece.position == PiecePositions.END) {
-            this.piecesToMove.delete(piece.id);
+            this.piecesToMove[0].delete(piece.id);
             this.repeat = true;
         } else {
             const piecesToJail: Map<Player, Piece[]> = new Map();
@@ -268,6 +280,10 @@ export class ServerGame extends Game {
                 piecesToJail.forEach(pieces => {
                     pieces.forEach(piece => piece.position = PiecePositions.JAIL);
                 });
+
+                if (player.activePieces().length > 1) {
+                    this.piecesToMove[0].delete(piece.id);
+                }
             }
         }
 
@@ -275,11 +291,15 @@ export class ServerGame extends Game {
             this.repeat = true;
         }
 
+        if (this.piecesToMove[0].size == 0) {
+            this.piecesToMove.splice(0, 1);
+        }
+
         if (player.allAtTheEnd()) {
             this.winner = player;
             this.status = GameStatus.FINISHED;
             this.log(`has finished! Winner: ${this.winner.name}`);
-        } else if (this.piecesToMove.size == 0 && !this.repeat && !this.allPiecesInJail) {
+        } else if (this.piecesToMove.length == 0 && !this.repeat && !this.allPiecesInJail) {
             this.currentPlayer = this.getNextPlayer();
         }
 
