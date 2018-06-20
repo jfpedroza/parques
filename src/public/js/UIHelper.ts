@@ -158,7 +158,6 @@ export class UIHelper {
                 break;
 
             case 5:
-                // TODO Add room name change on stage 5
                 this.board = $('#board');
                 const width = this.board.parent().width();
                 const height = this.board.parent().height();
@@ -166,6 +165,7 @@ export class UIHelper {
                 this.board.attr('width', width);
                 this.board.attr('height', height);
                 this.game.setSize(width, height);
+
                 this.game.calculatePathPoints();
                 const invalidPathPoints = this.game.validatePathPoints();
                 if (invalidPathPoints.size > 0) {
@@ -176,7 +176,29 @@ export class UIHelper {
                     });
                 }
 
-                $('#room-name').text(this.game.name);
+                this.roomNameInput = $('#room-input-name');
+                this.setEditRoomName(false);
+
+                this.roomNameInput.popover(<PopoverOptions>{
+                    content: '',
+                    placement: 'above',
+                    trigger: 'manual',
+                    html: true
+                });
+
+                $('#room-name-form').submit(() => {
+                    if (!this.roomNameInput.attr('disabled')) {
+                        this.roomNameInput.popover('hide');
+                        this.client.updateRoomName($('#room-input-name').val().toString());
+                        this.setEditRoomName(false);
+                    }
+                    return false;
+                });
+
+                if (this.game.creator.id != this.client.player.id) {
+                    $('#btn-edit-room-name').hide();
+                }
+
                 $('#btn-launch-dice').attr('disabled', 'disable');
 
                 this.game.dice.forEach((dice, i) => {
@@ -436,6 +458,16 @@ export class UIHelper {
                     $('#btn-start-game').removeAttr('disabled');
                 } else {
                     $('#btn-start-game').attr('disabled', 'disabled');
+                }
+            }
+        } else if (this.stage == 5) {
+            if (type == 'name') {
+                $('#room-name').text(game.name);
+            } else if (type == 'players') {
+                this.renderStage5Players();
+
+                if (game.creator.id == this.client.player.id) {
+                    $('#btn-edit-room-name').show();
                 }
             }
         }

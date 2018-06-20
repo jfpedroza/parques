@@ -5,7 +5,28 @@
  --><div id="panel-container" class="p-1">
         <div class="p-1">
             <div class="card room">
-                <h4 class="card-header text-center" id="room-name">Sala</h4>
+                <div class="card-header">
+                    <div id="no-edit-room-container">
+                        <div class="d-flex flex-row justify-content-between">
+                            <div class="p-2">
+                                <h4 id="room-name">Sala 1</h4>
+                            </div>
+                            <div class="p-2">
+                                <button class="btn btn-primary" id="btn-edit-room-name"><span class="oi oi-pencil"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="edit-room-container">
+                        <form id="room-name-form" class="d-flex flex-row justify-content-between">
+                            <div class="p-2">
+                                <input id="room-input-name" title="Nombre de la sala" class="form-control" placeholder="Nombre de la sala">
+                            </div>
+                            <div class="p-2">
+                                <button class="btn btn-primary" id="btn-save-room-name"><span class="oi oi-check"></span></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="d-flex flex-column player-list" id="player-list"></div>
                 </div>
