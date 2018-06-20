@@ -25,9 +25,11 @@ export class ServerGame extends Game {
 
     private movableJailPieces: number;
 
-    piecesToMove: Map<number, number[]>[];
+    private piecesToMove: Map<number, number[]>[];
 
     private remainingPiecesToMove: Map<Player, PieceMovement[]>;
+
+    private movedPieces: Set<Piece>;
 
     constructor(server: Server, creator: Player) {
         super();
@@ -82,6 +84,7 @@ export class ServerGame extends Game {
         this.tries = new Map();
         this.piecesToMove = [];
         this.remainingPiecesToMove = new Map();
+        this.movedPieces = new Set();
         this.players.forEach(player => this.tries.set(player, 0));
     }
 
@@ -114,6 +117,7 @@ export class ServerGame extends Game {
 
         this.repeat = false;
         this.piecesToMove.push(new Map());
+        this.movedPieces.clear();
         const piecesInJail = this.currentPlayer.piecesInJail();
         this.allPiecesInJail = this.currentPlayer.allInJail(false);
 
@@ -287,12 +291,23 @@ export class ServerGame extends Game {
             }
         }
 
-        if (PiecePositions.SAFES.includes(piece.position)) {
-            this.repeat = true;
-        }
-
         if (this.piecesToMove[0].size == 0) {
             this.piecesToMove.splice(0, 1);
+        }
+
+        this.movedPieces.add(piece);
+        if (this.piecesToMove.length == 0 && this.movedPieces.size > 0) {
+            let every = true;
+            for (const p of this.movedPieces) {
+                if (!PiecePositions.SAFES.includes(p.position)) {
+                    every = false;
+                    break;
+                }
+            }
+
+            if (every) {
+                this.repeat = true;
+            }
         }
 
         if (player.allAtTheEnd()) {
