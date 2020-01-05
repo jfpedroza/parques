@@ -8,6 +8,7 @@ import {Piece, PiecePositions, PieceMovement} from "../../models/Piece";
 import {Colors} from "../../models/Color";
 import {Point} from "../../models/Point";
 import {Player} from "../../models/Player";
+import {PopoverOption} from "bootstrap";
 import maxImages = Constants.maxImages;
 import animationTime = Constants.animationTime;
 import animationDelay = Constants.animationDelay;
@@ -103,7 +104,7 @@ export class UIHelper {
         switch (this.stage) {
             case 2:
                 this.username = $('#username');
-                this.username.popover(<PopoverOptions>{
+                this.username.popover(<PopoverOption>{
                     content: '',
                     placement: 'right',
                     trigger: 'manual',
@@ -130,9 +131,9 @@ export class UIHelper {
                 this.roomNameInput = $('#room-input-name');
                 this.setEditRoomName(false);
 
-                this.roomNameInput.popover(<PopoverOptions>{
+                this.roomNameInput.popover(<PopoverOption>{
                     content: '',
-                    placement: 'above',
+                    placement: 'top',
                     trigger: 'manual',
                     html: true
                 });
@@ -743,10 +744,21 @@ export class UIHelper {
         }
 
         toastr.options.positionClass = "toast-" + notification.position.name;
-        if (notification.title != null) {
-            toastr[notification.type.name](notification.message, notification.title);
+        let displayMethod: ToastrDisplayMethod;
+        if (notification.type == NotificationTypes.Success) {
+            displayMethod = toastr.success;
+        } else if (notification.type == NotificationTypes.Info) {
+            displayMethod = toastr.info;
+        } else if (notification.type == NotificationTypes.Warning) {
+            displayMethod = toastr.warning;
         } else {
-            toastr[notification.type.name](notification.message);
+            displayMethod = toastr.error;
+        }
+
+        if (notification.title != null) {
+            displayMethod(notification.message, notification.title);
+        } else {
+            displayMethod(notification.message);
         }
     }
 
