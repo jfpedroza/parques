@@ -25,14 +25,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/johnf9896/parques.git"
+    "url": "git+https://github.com/jfpedroza/parques.git"
   },
   "author": "Jhon Pedroza <jhonfpedroza@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/johnf9896/parques/issues"
+    "url": "https://github.com/jfpedroza/parques/issues"
   },
-  "homepage": "https://github.com/johnf9896/parques#readme",
+  "homepage": "https://github.com/jfpedroza/parques#readme",
   "dependencies": {
     "@types/lodash": "^4.14.149",
     "core-js": "^2.6.11",
