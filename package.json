@@ -57,7 +57,7 @@
     "concurrently": "^3.6.1",
     "node-sass": "^4.13.0",
     "nodemon": "^1.19.4",
-    "shelljs": "^0.7.8",
+    "shelljs": "^0.8.5",
     "tsify": "^3.0.3",
     "tslint": "^5.20.1",
     "typedoc": "^0.9.0",
